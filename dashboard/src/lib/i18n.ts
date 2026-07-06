@@ -1,0 +1,79 @@
+import type { Locale } from '@/types';
+
+type Dict = Record<string, string>;
+
+const en: Dict = {
+  app_name: 'MODIST Admin',
+  nav_dashboard: 'Dashboard',
+  nav_products: 'Products',
+  nav_categories: 'Categories',
+  nav_orders: 'Orders',
+  nav_promos: 'Promo Codes',
+  nav_users: 'Users',
+  nav_settings: 'Settings',
+  logout: 'Logout',
+  login: 'Login',
+  email: 'Email',
+  password: 'Password',
+  sign_in: 'Sign in',
+  search: 'Search',
+  create: 'Create',
+  edit: 'Edit',
+  delete: 'Delete',
+  save: 'Save',
+  cancel: 'Cancel',
+  confirm: 'Confirm',
+  loading: 'Loading…',
+  no_data: 'No data found',
+  error_generic: 'Something went wrong',
+  total_products: 'Products',
+  total_orders: 'Orders',
+  total_revenue: 'Revenue',
+  total_users: 'Users',
+  recent_orders: 'Recent Orders',
+  sales_overview: 'Sales Overview',
+  all_categories: 'All categories',
+  active: 'Active',
+  inactive: 'Inactive',
+};
+
+const ar: Dict = {
+  app_name: 'مودِست',
+  nav_dashboard: 'لوحة التحكم',
+  nav_products: 'المنتجات',
+  nav_categories: 'الفئات',
+  nav_orders: 'الطلبات',
+  nav_promos: 'أكواد الخصم',
+  nav_users: 'المستخدمون',
+  nav_settings: 'الإعدادات',
+  logout: 'تسجيل الخروج',
+  login: 'تسجيل الدخول',
+  email: 'البريد الإلكتروني',
+  password: 'كلمة المرور',
+  sign_in: 'دخول',
+  search: 'بحث',
+  create: 'إنشاء',
+  edit: 'تعديل',
+  delete: 'حذف',
+  save: 'حفظ',
+  cancel: 'إلغاء',
+  confirm: 'تأكيد',
+  loading: 'جارٍ التحميل…',
+  no_data: 'لا توجد بيانات',
+  error_generic: 'حدث خطأ ما',
+  total_products: 'المنتجات',
+  total_orders: 'الطلبات',
+  total_revenue: 'الإيرادات',
+  total_users: 'المستخدمون',
+  recent_orders: 'أحدث الطلبات',
+  sales_overview: 'نظرة عامة على المبيعات',
+  all_categories: 'كل الفئات',
+  active: 'نشط',
+  inactive: 'غير نشط',
+};
+
+const dictionaries: Record<Locale, Dict> = { en, ar };
+
+export function translate(locale: Locale, key: string): string {
+  return dictionaries[locale][key] ?? dictionaries.en[key] ?? key;
+}

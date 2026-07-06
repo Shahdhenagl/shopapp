@@ -1,0 +1,15 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Dependencies / build artifacts (also covered by api/ and dashboard/ .gitignore)
+**/node_modules/
+**/vendor/
+**/dist/
+
+# Environment / secrets
+**/.env
+**/.env.*
+!**/.env.example

@@ -1,0 +1,86 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Resources;
+
+use App\Domain\Tenancy\Models\TenantSettings;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+/**
+ * White-label theming payload for the current tenant. The underlying resource
+ * may be null (tenant has no settings row yet), so every field reads through
+ * `?->` and falls back to config defaults.
+ *
+ * @property-read TenantSettings|null $resource
+ */
+class AppSettingsResource extends JsonResource
+{
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        /** @var TenantSettings|null $settings */
+        $settings = $this->resource;
+
+        return [
+            'app_name' => $settings?->app_name ?? config('app.name'),
+            'currency' => $settings?->currency ?? config('app.currency', 'EGP'),
+            'brand' => $this->brand($settings),
+            'flags' => $this->flags($settings),
+        ];
+    }
+
+    /**
+     * Only include the colours that are set (non-null). Omitted colours fall
+     * back to the client's built-in neutrals.
+     *
+     * @return array<string, string>
+     */
+    private function brand(?TenantSettings $settings): array
+    {
+        $brand = [];
+
+        if ($settings?->brand_primary !== null) {
+            $brand['primary'] = (string) $settings->brand_primary;
+        }
+
+        if ($settings?->brand_on_primary !== null) {
+            $brand['on_primary'] = (string) $settings->brand_on_primary;
+        }
+
+        if ($settings?->brand_accent !== null) {
+            $brand['accent'] = (string) $settings->brand_accent;
+        }
+
+        return $brand;
+    }
+
+    /**
+     * Merge stored flags over the defaults (any omitted flag defaults true).
+     *
+     * @return array<string, bool>
+     */
+    private function flags(?TenantSettings $settings): array
+    {
+        $defaults = [
+            'card_payment' => true,
+            'cash_payment' => true,
+            'promo_codes' => true,
+            'favorites' => true,
+        ];
+
+        /** @var array<string, mixed> $stored */
+        $stored = $settings?->flags ?? [];
+
+        $flags = $defaults;
+
+        foreach ($stored as $key => $value) {
+            $flags[$key] = (bool) $value;
+        }
+
+        return $flags;
+    }
+}

@@ -1,0 +1,15 @@
+# SPA fallback for the React admin dashboard served under /dashboard.
+# Any path that is not a real file/dir is rewritten to the dashboard's
+# index.html so client-side (React Router) deep links work on refresh.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /dashboard/
+
+    # Serve existing files/directories directly.
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Everything else falls back to the SPA entry point.
+    RewriteRule ^ index.html [L]
+</IfModule>
