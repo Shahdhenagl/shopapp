@@ -7,7 +7,6 @@ namespace App\Domain\Auth\Actions;
 use App\Domain\Auth\Contracts\RefreshTokenStore;
 use App\Domain\Auth\Contracts\UserRepositoryInterface;
 use App\Domain\Auth\DTOs\AuthResult;
-use App\Domain\Auth\Exceptions\EmailNotVerifiedException;
 use App\Domain\Auth\Exceptions\InvalidCredentialsException;
 use Illuminate\Support\Facades\Hash;
 
@@ -27,11 +26,8 @@ final readonly class LoginAction
             throw new InvalidCredentialsException;
         }
 
-        // Sign-up is OTP-gated: reject a login until the email is verified.
-        if ($user->email_verified_at === null) {
-            throw new EmailNotVerifiedException;
-        }
-
+        // Email verification is soft: login is NOT gated. The client sees the
+        // user's `email_verified` flag and the server enforces at checkout.
         $token = $user->createToken('mobile')->plainTextToken;
         $refreshToken = $this->refreshTokens->issue($user);
 

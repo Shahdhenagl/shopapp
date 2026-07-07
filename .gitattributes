@@ -1,0 +1,5 @@
+# Normalize line endings. Shell scripts MUST stay LF so they run on the Linux
+# server; PHP/JS/text are stored with LF in the repo too.
+* text=auto eol=lf
+*.sh text eol=lf
+*.php text eol=lf

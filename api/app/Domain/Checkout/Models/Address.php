@@ -20,11 +20,24 @@ class Address extends Model
         'tenant_id',
         'user_id',
         'order_id',
+        'label',
         'address',
         'city',
         'area',
         'branch',
+        'phone',
+        'is_default',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_default' => 'boolean',
+        ];
+    }
 
     /**
      * @return BelongsTo<User, $this>

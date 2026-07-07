@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Requests\Api\V1\Auth;
+namespace App\Http\Requests\Admin\V1\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ResendVerificationRequest extends FormRequest
+class AdminLoginRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -20,6 +20,7 @@ class ResendVerificationRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
         ];
     }
 
@@ -31,6 +32,7 @@ class ResendVerificationRequest extends FormRequest
         return [
             'email.required' => __('validation.required', ['attribute' => 'email']),
             'email.email' => __('validation.email', ['attribute' => 'email']),
+            'password.required' => __('validation.required', ['attribute' => 'password']),
         ];
     }
 }

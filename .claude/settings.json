@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import json;d=json.load\\(open\\('MODIST.postman_collection.json',encoding='utf-8'\\)\\);print\\('valid JSON ✓'\\);print\\('folders:',len\\(d['item']\\)\\);print\\('total requests:',sum\\(len\\(f['item']\\) for f in d['item']\\)\\)\")",
+      "Bash(python -c \"import json;d=json.load\\(open\\('MODIST.postman_collection.json',encoding='utf-8'\\)\\);print\\('valid JSON OK'\\);print\\('folders:',len\\(d['item']\\)\\);print\\('total requests:',sum\\(len\\(f['item']\\) for f in d['item']\\)\\)\")"
+    ]
+  }
+}

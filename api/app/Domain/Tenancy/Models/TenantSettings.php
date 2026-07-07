@@ -18,6 +18,9 @@ class TenantSettings extends Model
         'tenant_id',
         'app_name',
         'currency',
+        'storefront_mode',
+        'logo_url',
+        'shipping_fee',
         'brand_primary',
         'brand_on_primary',
         'brand_accent',
@@ -31,6 +34,7 @@ class TenantSettings extends Model
     {
         return [
             'flags' => 'array',
+            'shipping_fee' => 'decimal:2',
         ];
     }
 

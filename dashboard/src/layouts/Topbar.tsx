@@ -2,20 +2,20 @@ import { Globe, LogOut, Menu, Moon, Sun } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLocaleStore } from '@/store/locale';
 import { useAuthStore } from '@/store/auth';
-import { authService } from '@/api';
+import { adminAuthService } from '@/api';
 import { useTheme } from '@/hooks/useTheme';
 import { Button } from '@/components/Button';
 
 export function Topbar({ onMenu }: { onMenu: () => void }) {
   const { locale, toggleLocale, t } = useLocaleStore();
-  const user = useAuthStore((s) => s.user);
+  const admin = useAuthStore((s) => s.admin);
   const clearSession = useAuthStore((s) => s.clearSession);
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
 
   const handleLogout = async () => {
     try {
-      await authService.logout();
+      await adminAuthService.logout();
     } catch {
       // ignore network error on logout
     }
@@ -34,7 +34,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
           <Menu size={20} />
         </button>
         <span className="hidden text-sm text-slate-500 sm:block dark:text-slate-400">
-          {user ? `${user.name}` : ''}
+          {admin ? `${admin.name}` : ''}
         </span>
       </div>
 

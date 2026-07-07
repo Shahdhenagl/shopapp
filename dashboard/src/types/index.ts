@@ -15,6 +15,144 @@ export interface AuthResponse {
   user: User;
 }
 
+// ---------------------------------------------------------------------------
+// Admin API (§ /api/admin/v1) — Phase 1: Auth, Settings, Categories, Products
+// ---------------------------------------------------------------------------
+
+/** Bilingual value used across admin resources. */
+export interface LocalizedText {
+  en: string;
+  ar: string;
+}
+
+/** Authenticated admin (POST /auth/login → admin, GET /me → data). */
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  tenant_id: string | null;
+}
+
+/** Flat (NOT data-wrapped) login response: { token, admin }. */
+export interface AdminAuthResponse {
+  token: string;
+  admin: AdminUser;
+}
+
+export type StorefrontMode = 'single' | 'multi_department';
+
+export interface StoreSettingsFlags {
+  card_payment: boolean;
+  cash_payment: boolean;
+  promo_codes: boolean;
+  favorites: boolean;
+}
+
+export interface StoreSettingsBrand {
+  primary: string; // hex #RRGGBB or #AARRGGBB
+  on_primary: string;
+  accent: string;
+}
+
+/** GET /settings → { data: StoreSettings }. */
+export interface StoreSettings {
+  app_name: string;
+  currency: string;
+  storefront_mode: StorefrontMode;
+  logo_url: string | null;
+  shipping_fee: number;
+  brand: StoreSettingsBrand;
+  flags: StoreSettingsFlags;
+}
+
+/** PATCH /settings accepts any subset. Brand colours are sent FLAT. */
+export interface StoreSettingsUpdate {
+  app_name?: string;
+  currency?: string;
+  storefront_mode?: StorefrontMode;
+  logo_url?: string | null;
+  shipping_fee?: number;
+  brand_primary?: string;
+  brand_on_primary?: string;
+  brand_accent?: string;
+  flags?: Partial<StoreSettingsFlags>;
+}
+
+/** A node in the categories tree (GET /categories → { data: CategoryNode[] }). */
+export interface CategoryNode {
+  id: string;
+  slug: string;
+  parent_id: string | null;
+  name: LocalizedText;
+  label_key: string;
+  icon_key: string | null;
+  image_url: string | null;
+  sort_order: number;
+  is_leaf: boolean;
+  product_count: number;
+  children: CategoryNode[];
+}
+
+/** Body for POST/PATCH /categories. `name` may be bilingual or a plain string. */
+export interface CategoryNodeInput {
+  name: LocalizedText | string;
+  slug?: string;
+  parent_id?: string | null;
+  icon_key?: string | null;
+  image_url?: string | null;
+  sort_order?: number;
+}
+
+/** Product as returned by the Admin API (GET /products). */
+export interface AdminProduct {
+  id: string;
+  name: LocalizedText;
+  style: LocalizedText;
+  description: LocalizedText;
+  price: number;
+  currency: string;
+  rating: number;
+  is_newest: boolean;
+  category_id: string; // leaf category slug
+  images: string[];
+  sizes: string[];
+  colors: string[];
+  created_at: string;
+}
+
+/** Body for POST/PATCH /products. */
+export interface AdminProductInput {
+  name: LocalizedText;
+  style?: LocalizedText;
+  description?: LocalizedText;
+  price: number;
+  currency?: string;
+  is_newest?: boolean;
+  rating?: number;
+  category_id: string; // leaf slug
+  images: string[];
+  sizes: string[];
+  colors: (string | number)[];
+}
+
+/** Laravel paginated envelope. */
+export interface Paginated<T> {
+  data: T[];
+  meta?: {
+    current_page?: number;
+    last_page?: number;
+    per_page?: number;
+    total?: number;
+  };
+  links?: {
+    first?: string | null;
+    last?: string | null;
+    prev?: string | null;
+    next?: string | null;
+  };
+}
+
 /**
  * Product as returned by ProductResource (§4.3).
  * `colors` are #AARRGGBB hex strings, `images` absolute URLs.

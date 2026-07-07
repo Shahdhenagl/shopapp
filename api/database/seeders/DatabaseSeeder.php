@@ -28,6 +28,7 @@ final class DatabaseSeeder extends Seeder
             ReviewSeeder::class,
             PromoSeeder::class,
             BannerSeeder::class,
+            AdminSeeder::class,
         ]);
     }
 }

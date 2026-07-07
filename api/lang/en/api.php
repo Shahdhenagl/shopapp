@@ -16,15 +16,24 @@ return [
 
     // Generic
     'unauthenticated' => 'Unauthenticated.',
+    'forbidden' => 'You are not allowed to perform this action.',
     'not_found' => 'Resource not found.',
     'server_error' => 'Something went wrong. Please try again.',
+
+    // Admin / dashboard
+    'multi_requires_tree' => 'Switch to multi-department needs at least one category with sub-categories.',
+    'category_cycle' => 'A category cannot be moved under itself or its own descendant.',
+    'category_not_empty' => 'This category still has sub-categories or products. Move or remove them first.',
+    'product_category_invalid' => 'The selected category does not exist.',
+    'product_category_not_leaf' => 'A product must be assigned to a leaf category (one with no sub-categories).',
 
     // Authentication
     'invalid_credentials' => 'The provided credentials are incorrect.',
     'invalid_refresh_token' => 'The refresh token is invalid or has expired.',
     'logged_out' => 'Logged out successfully.',
     'email_in_use' => 'An account with this email already exists.',
-    'email_not_verified' => 'Please verify your email before signing in.',
+    'email_not_verified' => 'Please verify your email address to continue.',
+    'address_not_found' => 'Address not found.',
 
     // Sign-up email verification (OTP)
     'otp_invalid' => 'That code is incorrect or has expired.',

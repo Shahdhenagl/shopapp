@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Globe } from 'lucide-react';
-import { authService, getErrorMessage } from '@/api';
+import { adminAuthService, getErrorMessage } from '@/api';
 import { useAuthStore } from '@/store/auth';
 import { useLocaleStore } from '@/store/locale';
 import { Button } from '@/components/Button';
@@ -33,7 +33,7 @@ export function Login() {
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);
     try {
-      const auth = await authService.login(values);
+      const auth = await adminAuthService.login(values);
       setSession(auth);
       navigate('/', { replace: true });
     } catch (err) {

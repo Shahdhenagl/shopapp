@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Checkout\Actions;
 
+use App\Domain\Auth\Exceptions\EmailNotVerifiedException;
 use App\Domain\Auth\Models\User;
 use App\Domain\Cart\Contracts\CartRepositoryInterface;
 use App\Domain\Cart\Contracts\PromoRepositoryInterface;
@@ -29,6 +30,11 @@ final readonly class CreateOrderAction
 
     public function execute(User $user, string $paymentMethod, ?string $paymentToken, AddressDetails $address): Order
     {
+        // Soft email verification is enforced here — the single server-side gate.
+        if ($user->email_verified_at === null) {
+            throw new EmailNotVerifiedException;
+        }
+
         $cart = $this->carts->forUser($user);
 
         if ($cart->items->isEmpty()) {

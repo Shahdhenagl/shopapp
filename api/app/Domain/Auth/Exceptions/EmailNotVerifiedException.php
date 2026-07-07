@@ -7,8 +7,9 @@ namespace App\Domain\Auth\Exceptions;
 use App\Domain\Shared\Exceptions\DomainException;
 
 /**
- * Login attempted before the sign-up email OTP was confirmed (BACKEND.md §4 —
- * 403 forbidden, code auth.email_not_verified).
+ * Checkout attempted by a user whose email is not yet verified. Soft email
+ * verification is enforced server-side here — the one place it gates the flow
+ * (BACKEND.md §1.4 — 403 forbidden, code auth.email_not_verified).
  */
 final class EmailNotVerifiedException extends DomainException
 {

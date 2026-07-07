@@ -20,6 +20,8 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'avatar_url' => $this->avatar_url,
+            // Soft email verification: usable immediately, enforced at checkout.
+            'email_verified' => $this->email_verified_at !== null,
         ];
     }
 }

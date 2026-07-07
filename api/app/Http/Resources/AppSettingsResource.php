@@ -28,6 +28,11 @@ class AppSettingsResource extends JsonResource
         return [
             'app_name' => $settings?->app_name ?? config('app.name'),
             'currency' => $settings?->currency ?? config('app.currency', 'EGP'),
+            // Reshapes the app navigation: 'single' (flat fashion catalog) or
+            // 'multi_department' (department rail + Category browse).
+            'storefront_mode' => $settings?->storefront_mode ?? 'single',
+            'logo_url' => $settings?->logo_url,
+            'shipping_fee' => (int) round((float) ($settings?->shipping_fee ?? 0)),
             'brand' => $this->brand($settings),
             'flags' => $this->flags($settings),
         ];

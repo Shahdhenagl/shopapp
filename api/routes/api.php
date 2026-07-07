@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\Addresses\AddressController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Banners\BannerController;
@@ -24,14 +25,8 @@ Route::prefix('v1')->group(function (): void {
     |--------------------------------------------------------------------------
     */
     Route::prefix('auth')->group(function (): void {
+        // Instant sign-up (returns a token pair; account starts unverified).
         Route::post('register', [AuthController::class, 'register'])
-            ->middleware('throttle:auth');
-
-        // Sign-up OTP (email verification) — activates the account + signs in.
-        Route::post('register/verify', [AuthController::class, 'verifyRegistration'])
-            ->middleware('throttle:auth');
-
-        Route::post('register/resend', [AuthController::class, 'resendRegistration'])
             ->middleware('throttle:auth');
 
         Route::post('login', [AuthController::class, 'login'])
@@ -47,9 +42,14 @@ Route::prefix('v1')->group(function (): void {
             Route::post('reset', [PasswordResetController::class, 'reset']);
         });
 
-        // Bearer-protected.
-        Route::post('logout', [AuthController::class, 'logout'])
-            ->middleware('auth:sanctum');
+        // Soft email verification (Bearer — user resolved from the token).
+        Route::middleware('auth:sanctum')->group(function (): void {
+            Route::post('email/verify/send', [AuthController::class, 'sendEmailVerification'])
+                ->middleware('throttle:auth');
+            Route::post('email/verify', [AuthController::class, 'verifyEmail']);
+
+            Route::post('logout', [AuthController::class, 'logout']);
+        });
     });
 
     /*
@@ -85,6 +85,13 @@ Route::prefix('v1')->group(function (): void {
         Route::get('favorites', [FavoriteController::class, 'index']);
         Route::post('favorites', [FavoriteController::class, 'toggle']);
         Route::delete('favorites', [FavoriteController::class, 'clear']);
+
+        // Addresses (delivery address book)
+        Route::get('addresses', [AddressController::class, 'index']);
+        Route::post('addresses', [AddressController::class, 'store']);
+        Route::patch('addresses/{id}', [AddressController::class, 'update']);
+        Route::delete('addresses/{id}', [AddressController::class, 'destroy']);
+        Route::post('addresses/{id}/default', [AddressController::class, 'default']);
 
         // Product reviews (write is auth-only; read is public above)
         Route::post('products/{id}/reviews', [ReviewController::class, 'store']);

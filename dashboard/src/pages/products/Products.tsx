@@ -2,11 +2,11 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pencil, Plus, Search, Star, Trash2 } from 'lucide-react';
 import {
-  categoriesService,
+  adminCategoriesService,
+  adminProductsService,
+  flattenTree,
   getErrorMessage,
-  productsService,
 } from '@/api';
-import type { ProductInput } from '@/api/products';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/Button';
 import { Badge } from '@/components/Badge';
@@ -17,44 +17,45 @@ import { ProductForm } from './ProductForm';
 import { useLocaleStore } from '@/store/locale';
 import { toast } from '@/store/toast';
 import { formatMoney } from '@/lib/format';
-import type { Product } from '@/types';
+import type { AdminProduct, AdminProductInput, CategoryNode } from '@/types';
 
 export function Products() {
-  const t = useLocaleStore((s) => s.t);
+  const { t, locale } = useLocaleStore();
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
-  const [editing, setEditing] = useState<Product | null>(null);
+  const [editing, setEditing] = useState<AdminProduct | null>(null);
   const [creating, setCreating] = useState(false);
-  const [deleting, setDeleting] = useState<Product | null>(null);
+  const [deleting, setDeleting] = useState<AdminProduct | null>(null);
 
   const categoriesQuery = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => categoriesService.list(),
+    queryKey: ['admin-categories'],
+    queryFn: () => adminCategoriesService.tree(),
   });
+
+  // Only leaf categories can hold products.
+  const leafCategories: CategoryNode[] = useMemo(
+    () =>
+      flattenTree(categoriesQuery.data ?? [])
+        .map(({ node }) => node)
+        .filter((n) => n.is_leaf),
+    [categoriesQuery.data],
+  );
 
   const productsQuery = useQuery({
-    queryKey: ['products'],
-    queryFn: () => productsService.list(),
+    queryKey: ['admin-products', { search, category }],
+    queryFn: () =>
+      adminProductsService.list({
+        search: search || undefined,
+        category: category || undefined,
+      }),
   });
 
-  const filtered = useMemo(() => {
-    const items = productsQuery.data ?? [];
-    return items.filter((p) => {
-      const matchesCat = !category || p.category_id === category;
-      const q = search.toLowerCase();
-      const matchesSearch =
-        !q ||
-        p.name.toLowerCase().includes(q) ||
-        p.style.toLowerCase().includes(q);
-      return matchesCat && matchesSearch;
-    });
-  }, [productsQuery.data, category, search]);
-
   const createMutation = useMutation({
-    mutationFn: (input: ProductInput) => productsService.create(input),
+    mutationFn: (input: AdminProductInput) => adminProductsService.create(input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: ['admin-products'] });
+      qc.invalidateQueries({ queryKey: ['admin-categories'] });
       setCreating(false);
       toast.success('Product created');
     },
@@ -62,10 +63,10 @@ export function Products() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, input }: { id: string; input: ProductInput }) =>
-      productsService.update(id, input),
+    mutationFn: ({ id, input }: { id: string; input: AdminProductInput }) =>
+      adminProductsService.update(id, input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: ['admin-products'] });
       setEditing(null);
       toast.success('Product updated');
     },
@@ -73,37 +74,41 @@ export function Products() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => productsService.remove(id),
+    mutationFn: (id: string) => adminProductsService.remove(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: ['admin-products'] });
+      qc.invalidateQueries({ queryKey: ['admin-categories'] });
       setDeleting(null);
       toast.success('Product deleted');
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 
-  const categories = categoriesQuery.data ?? [];
+  const rows = productsQuery.data ?? [];
 
-  const columns: Column<Product>[] = [
+  const columns: Column<AdminProduct>[] = [
     {
       key: 'image',
       header: '',
-      render: (p) => (
-        <img
-          src={p.images[0]}
-          alt={p.name}
-          className="h-12 w-12 rounded-lg object-cover"
-          loading="lazy"
-        />
-      ),
+      render: (p) =>
+        p.images[0] ? (
+          <img
+            src={p.images[0]}
+            alt={p.name.en}
+            className="h-12 w-12 rounded-lg object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="h-12 w-12 rounded-lg bg-slate-100 dark:bg-slate-800" />
+        ),
     },
     {
       key: 'name',
       header: t('nav_products'),
       render: (p) => (
         <div>
-          <p className="font-medium">{p.name}</p>
-          <p className="text-xs text-slate-400">{p.style}</p>
+          <p className="font-medium">{p.name[locale] || p.name.en}</p>
+          <p className="text-xs text-slate-400">{p.style[locale] || p.style.en}</p>
         </div>
       ),
     },
@@ -158,7 +163,7 @@ export function Products() {
     <div>
       <PageHeader
         title={t('nav_products')}
-        subtitle={`${filtered.length} item(s)`}
+        subtitle={`${rows.length} item(s)`}
         actions={
           <Button icon={<Plus size={16} />} onClick={() => setCreating(true)}>
             {t('create')}
@@ -180,14 +185,14 @@ export function Products() {
           />
         </div>
         <select
-          className="input max-w-[200px]"
+          className="input max-w-[220px]"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
         >
           <option value="">{t('all_categories')}</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.id}
+          {leafCategories.map((c) => (
+            <option key={c.id} value={c.slug}>
+              {c.name.en} ({c.slug})
             </option>
           ))}
         </select>
@@ -196,7 +201,7 @@ export function Products() {
       <div className="card p-2">
         <DataTable
           columns={columns}
-          rows={filtered}
+          rows={rows}
           rowKey={(p) => p.id}
           loading={productsQuery.isLoading}
           error={productsQuery.error ? getErrorMessage(productsQuery.error) : null}
@@ -211,7 +216,7 @@ export function Products() {
         size="xl"
       >
         <ProductForm
-          categories={categories}
+          categories={leafCategories}
           submitting={createMutation.isPending}
           onSubmit={(input) => createMutation.mutate(input)}
           onCancel={() => setCreating(false)}
@@ -227,11 +232,9 @@ export function Products() {
         {editing && (
           <ProductForm
             initial={editing}
-            categories={categories}
+            categories={leafCategories}
             submitting={updateMutation.isPending}
-            onSubmit={(input) =>
-              updateMutation.mutate({ id: editing.id, input })
-            }
+            onSubmit={(input) => updateMutation.mutate({ id: editing.id, input })}
             onCancel={() => setEditing(null)}
           />
         )}
@@ -240,7 +243,7 @@ export function Products() {
       <ConfirmDialog
         open={!!deleting}
         title="Delete product"
-        message={`Delete "${deleting?.name}"? This cannot be undone.`}
+        message={`Delete "${deleting?.name.en}"? This cannot be undone.`}
         loading={deleteMutation.isPending}
         onConfirm={() => deleting && deleteMutation.mutate(deleting.id)}
         onCancel={() => setDeleting(null)}

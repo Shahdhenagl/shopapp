@@ -17,10 +17,18 @@ return [
             'provider' => 'users',
         ],
 
-        // Sanctum guard for token-authenticated API clients.
+        // Sanctum guard for token-authenticated app clients (User tokens).
         'sanctum' => [
             'driver' => 'sanctum',
             'provider' => 'users',
+        ],
+
+        // Sanctum guard for dashboard operators (AdminUser tokens). A distinct
+        // provider means an app token can't authenticate an admin route and
+        // vice-versa (Sanctum validates the tokenable against the provider model).
+        'admin' => [
+            'driver' => 'sanctum',
+            'provider' => 'admin_users',
         ],
     ],
 
@@ -28,6 +36,13 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Domain\Auth\Models\User::class),
+        ],
+
+        // Dashboard operators (separate model; authenticated via Sanctum tokens
+        // that carry the `admin` ability).
+        'admin_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Domain\Admin\Models\AdminUser::class,
         ],
     ],
 

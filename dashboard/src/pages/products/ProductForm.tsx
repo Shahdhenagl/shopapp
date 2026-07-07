@@ -1,45 +1,43 @@
 import { useForm, Controller } from 'react-hook-form';
-import { useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
-import { z } from 'zod';
+import { useRef, useState } from 'react';
+import { Plus, Star, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/Button';
-import type { Category, Product } from '@/types';
-import type { ProductInput } from '@/api/products';
+import { uploadMedia, getErrorMessage } from '@/api';
+import { toast } from '@/store/toast';
 import { hexArgbToCss } from '@/lib/format';
+import type { AdminProduct, AdminProductInput, CategoryNode } from '@/types';
 
 const ALL_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
-export const productSchema = z.object({
-  name_en: z.string().min(2, 'Name (EN) is required'),
-  name_ar: z.string().min(2, 'Name (AR) is required'),
-  style_en: z.string().min(1, 'Style (EN) is required'),
-  style_ar: z.string().min(1, 'Style (AR) is required'),
-  description_en: z.string().min(1, 'Description (EN) is required'),
-  description_ar: z.string().min(1, 'Description (AR) is required'),
-  price: z.coerce.number().positive('Price must be > 0'),
-  currency: z.string().min(1),
-  category_id: z.string().min(1, 'Category is required'),
-  rating: z.coerce.number().min(0).max(5),
-  is_newest: z.boolean(),
-});
-
-type FormValues = z.infer<typeof productSchema>;
-
-interface ProductFormProps {
-  initial?: Product;
-  categories: Category[];
-  submitting?: boolean;
-  onSubmit: (input: ProductInput) => void;
-  onCancel: () => void;
-}
-
-// Default ARGB hex used when adding a new color.
+// Default ARGB hex used when adding a new color (opaque).
 const DEFAULT_HEX = '#FF1B2A4A';
 
 function cssToArgb(css: string): string {
-  // css like #rrggbb -> #FFrrggbb
   const h = css.replace('#', '');
   return `#FF${h.toUpperCase()}`;
+}
+
+interface FormValues {
+  name_en: string;
+  name_ar: string;
+  style_en: string;
+  style_ar: string;
+  description_en: string;
+  description_ar: string;
+  price: number;
+  currency: string;
+  category_id: string;
+  rating: number;
+  is_newest: boolean;
+}
+
+interface ProductFormProps {
+  initial?: AdminProduct;
+  /** Leaf categories only (is_leaf === true). */
+  categories: CategoryNode[];
+  submitting?: boolean;
+  onSubmit: (input: AdminProductInput) => void;
+  onCancel: () => void;
 }
 
 export function ProductForm({
@@ -49,14 +47,12 @@ export function ProductForm({
   onSubmit,
   onCancel,
 }: ProductFormProps) {
-  const [images, setImages] = useState<string[]>(
-    initial?.images ?? ['https://picsum.photos/seed/new/600/800'],
-  );
-  const [colors, setColors] = useState<string[]>(
-    initial?.colors ?? [DEFAULT_HEX],
-  );
-  const [sizes, setSizes] = useState<string[]>(initial?.sizes ?? ['M', 'L']);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [images, setImages] = useState<string[]>(initial?.images ?? []);
+  const [colors, setColors] = useState<string[]>(initial?.colors ?? []);
+  const [sizes, setSizes] = useState<string[]>(initial?.sizes ?? []);
   const [newImage, setNewImage] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   const {
     register,
@@ -65,42 +61,48 @@ export function ProductForm({
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
-      name_en: initial?.name_en ?? initial?.name ?? '',
-      name_ar: initial?.name_ar ?? '',
-      style_en: initial?.style_en ?? initial?.style ?? '',
-      style_ar: initial?.style_ar ?? '',
-      description_en: initial?.description_en ?? initial?.description ?? '',
-      description_ar: initial?.description_ar ?? '',
-      price: initial?.price ?? 820,
+      name_en: initial?.name.en ?? '',
+      name_ar: initial?.name.ar ?? '',
+      style_en: initial?.style.en ?? '',
+      style_ar: initial?.style.ar ?? '',
+      description_en: initial?.description.en ?? '',
+      description_ar: initial?.description.ar ?? '',
+      price: initial?.price ?? 0,
       currency: initial?.currency ?? 'EGP',
-      category_id: initial?.category_id ?? categories[0]?.id ?? '',
-      rating: initial?.rating ?? 4.6,
+      category_id: initial?.category_id ?? categories[0]?.slug ?? '',
+      rating: initial?.rating ?? 0,
       is_newest: initial?.is_newest ?? false,
     },
   });
 
-  const submit = handleSubmit((values) => {
-    // Final shape guard via zod (form-level required checks already applied).
-    const parsed = productSchema.safeParse(values);
-    const v = parsed.success ? parsed.data : values;
-    const input: ProductInput = {
-      name: v.name_en,
-      style: v.style_en,
-      description: v.description_en,
-      name_en: v.name_en,
-      name_ar: v.name_ar,
-      style_en: v.style_en,
-      style_ar: v.style_ar,
-      description_en: v.description_en,
-      description_ar: v.description_ar,
-      price: v.price,
-      currency: v.currency,
-      images: images.filter(Boolean),
-      colors,
-      sizes,
-      category_id: v.category_id,
-      rating: v.rating,
+  const onPickFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const url = await uploadMedia(file);
+        setImages((prev) => [...prev, url]);
+      }
+    } catch (e) {
+      toast.error(getErrorMessage(e));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const submit = handleSubmit((v) => {
+    const input: AdminProductInput = {
+      name: { en: v.name_en.trim(), ar: v.name_ar.trim() },
+      style: { en: v.style_en.trim(), ar: v.style_ar.trim() },
+      description: { en: v.description_en.trim(), ar: v.description_ar.trim() },
+      price: Number(v.price),
+      currency: v.currency.trim() || 'EGP',
       is_newest: v.is_newest,
+      rating: Number(v.rating),
+      category_id: v.category_id,
+      images: images.filter(Boolean),
+      sizes,
+      colors,
     };
     onSubmit(input);
   });
@@ -115,23 +117,28 @@ export function ProductForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className="label">Name (EN)</label>
-          <input className="input" {...register('name_en')} />
+          <input
+            className="input"
+            {...register('name_en', { required: 'Name (EN) is required' })}
+          />
           {errors.name_en && <p className="field-error">{errors.name_en.message}</p>}
         </div>
         <div>
           <label className="label">Name (AR)</label>
-          <input className="input" dir="rtl" {...register('name_ar')} />
+          <input
+            className="input"
+            dir="rtl"
+            {...register('name_ar', { required: 'Name (AR) is required' })}
+          />
           {errors.name_ar && <p className="field-error">{errors.name_ar.message}</p>}
         </div>
         <div>
           <label className="label">Style (EN)</label>
           <input className="input" {...register('style_en')} />
-          {errors.style_en && <p className="field-error">{errors.style_en.message}</p>}
         </div>
         <div>
           <label className="label">Style (AR)</label>
           <input className="input" dir="rtl" {...register('style_ar')} />
-          {errors.style_ar && <p className="field-error">{errors.style_ar.message}</p>}
         </div>
       </div>
 
@@ -139,23 +146,25 @@ export function ProductForm({
         <div>
           <label className="label">Description (EN)</label>
           <textarea className="input" rows={3} {...register('description_en')} />
-          {errors.description_en && (
-            <p className="field-error">{errors.description_en.message}</p>
-          )}
         </div>
         <div>
           <label className="label">Description (AR)</label>
           <textarea className="input" dir="rtl" rows={3} {...register('description_ar')} />
-          {errors.description_ar && (
-            <p className="field-error">{errors.description_ar.message}</p>
-          )}
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div>
           <label className="label">Price</label>
-          <input type="number" step="0.01" className="input" {...register('price')} />
+          <input
+            type="number"
+            step="0.01"
+            className="input"
+            {...register('price', {
+              required: 'Required',
+              min: { value: 0, message: '≥ 0' },
+            })}
+          />
           {errors.price && <p className="field-error">{errors.price.message}</p>}
         </div>
         <div>
@@ -163,11 +172,15 @@ export function ProductForm({
           <input className="input" {...register('currency')} />
         </div>
         <div>
-          <label className="label">Category</label>
-          <select className="input" {...register('category_id')}>
+          <label className="label">Category (leaf)</label>
+          <select
+            className="input"
+            {...register('category_id', { required: 'Required' })}
+          >
+            {categories.length === 0 && <option value="">No leaf categories</option>}
             {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.id}
+              <option key={c.id} value={c.slug}>
+                {c.name.en} ({c.slug})
               </option>
             ))}
           </select>
@@ -177,25 +190,38 @@ export function ProductForm({
         </div>
         <div>
           <label className="label">Rating</label>
-          <input type="number" step="0.1" min="0" max="5" className="input" {...register('rating')} />
-          {errors.rating && <p className="field-error">{errors.rating.message}</p>}
+          <input
+            type="number"
+            step="0.1"
+            min="0"
+            max="5"
+            className="input"
+            {...register('rating')}
+          />
         </div>
       </div>
 
-      {/* Images */}
+      {/* Images gallery — first image is the primary. */}
       <div>
-        <label className="label">Images</label>
+        <label className="label">Images (first = primary)</label>
         <div className="space-y-2">
           {images.map((url, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <img
-                src={url}
-                alt=""
-                className="h-10 w-10 rounded object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.visibility = 'hidden';
-                }}
-              />
+            <div key={`${url}-${i}`} className="flex items-center gap-2">
+              <div className="relative">
+                <img
+                  src={url}
+                  alt=""
+                  className="h-10 w-10 rounded object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.visibility = 'hidden';
+                  }}
+                />
+                {i === 0 && (
+                  <span className="absolute -end-1 -top-1 rounded-full bg-brand-700 p-0.5 text-white">
+                    <Star size={10} className="fill-white" />
+                  </span>
+                )}
+              </div>
               <input
                 className="input flex-1"
                 value={url}
@@ -205,20 +231,58 @@ export function ProductForm({
                   )
                 }
               />
+              {i !== 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  title="Make primary"
+                  onClick={() =>
+                    setImages((prev) => {
+                      const next = [...prev];
+                      const [item] = next.splice(i, 1);
+                      next.unshift(item);
+                      return next;
+                    })
+                  }
+                >
+                  <Star size={16} />
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
+                className="text-red-500"
                 onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
               >
                 <Trash2 size={16} />
               </Button>
             </div>
           ))}
-          <div className="flex items-center gap-2">
+
+          <div className="flex flex-wrap items-center gap-2">
             <input
-              className="input flex-1"
-              placeholder="https://…"
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => onPickFiles(e.target.files)}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              loading={uploading}
+              icon={<Upload size={16} />}
+              onClick={() => fileRef.current?.click()}
+            >
+              Upload
+            </Button>
+            <input
+              className="input flex-1 min-w-[160px]"
+              placeholder="or paste an image URL…"
               value={newImage}
               onChange={(e) => setNewImage(e.target.value)}
             />
@@ -240,20 +304,21 @@ export function ProductForm({
         </div>
       </div>
 
-      {/* Colors */}
+      {/* Colors (optional, empty allowed) */}
       <div>
-        <label className="label">Colors (#AARRGGBB)</label>
+        <label className="label">Colors (#AARRGGBB · optional)</label>
         <div className="flex flex-wrap items-center gap-2">
           {colors.map((c, i) => (
-            <div key={i} className="flex items-center gap-1 rounded-lg border border-slate-200 p-1 dark:border-slate-700">
+            <div
+              key={i}
+              className="flex items-center gap-1 rounded-lg border border-slate-200 p-1 dark:border-slate-700"
+            >
               <input
                 type="color"
                 value={hexArgbToCss(c)}
                 onChange={(e) =>
                   setColors((prev) =>
-                    prev.map((col, idx) =>
-                      idx === i ? cssToArgb(e.target.value) : col,
-                    ),
+                    prev.map((col, idx) => (idx === i ? cssToArgb(e.target.value) : col)),
                   )
                 }
                 className="h-7 w-7 cursor-pointer rounded"
@@ -280,9 +345,9 @@ export function ProductForm({
         </div>
       </div>
 
-      {/* Sizes */}
+      {/* Sizes (optional, empty allowed) */}
       <div>
-        <label className="label">Sizes</label>
+        <label className="label">Sizes (optional)</label>
         <div className="flex flex-wrap gap-2">
           {ALL_SIZES.map((s) => (
             <button

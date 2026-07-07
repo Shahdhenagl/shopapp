@@ -1,0 +1,532 @@
+{
+  "info": {
+    "name": "MODIST API",
+    "description": "MODIST e-commerce API — shopapp.pixelmindeg.com. Set {{token}} after login/register-verify (auto-saved by the Login & Verify requests). Toggle {{locale}} between en/ar.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://shopapp.pixelmindeg.com/api/v1" },
+    { "key": "locale", "value": "en" },
+    { "key": "token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "email", "value": "sara@example.com" },
+    { "key": "password", "value": "password123" },
+    { "key": "code", "value": "1234" },
+    { "key": "product_id", "value": "" },
+    { "key": "line_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (OTP-gated → sends code)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" }
+            ],
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Sara\",\n  \"email\": \"{{email}}\",\n  \"phone\": \"+201000000000\",\n  \"password\": \"{{password}}\"\n}" }
+          }
+        },
+        {
+          "name": "Register - Verify OTP (→ token)",
+          "event": [
+            { "listen": "test", "script": { "type": "text/javascript", "exec": [
+              "if (pm.response.code === 200) {",
+              "  const j = pm.response.json();",
+              "  if (j.token) pm.collectionVariables.set('token', j.token);",
+              "  if (j.refresh_token) pm.collectionVariables.set('refresh_token', j.refresh_token);",
+              "}"
+            ] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" }
+            ],
+            "url": { "raw": "{{base_url}}/auth/register/verify", "host": ["{{base_url}}"], "path": ["auth", "register", "verify"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"code\": \"{{code}}\"\n}" }
+          }
+        },
+        {
+          "name": "Register - Resend OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" }
+            ],
+            "url": { "raw": "{{base_url}}/auth/register/resend", "host": ["{{base_url}}"], "path": ["auth", "register", "resend"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\"\n}" }
+          }
+        },
+        {
+          "name": "Login (→ token)",
+          "event": [
+            { "listen": "test", "script": { "type": "text/javascript", "exec": [
+              "if (pm.response.code === 200) {",
+              "  const j = pm.response.json();",
+              "  if (j.token) pm.collectionVariables.set('token', j.token);",
+              "  if (j.refresh_token) pm.collectionVariables.set('refresh_token', j.refresh_token);",
+              "}"
+            ] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" }
+            ],
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}" }
+          }
+        },
+        {
+          "name": "Refresh token",
+          "event": [
+            { "listen": "test", "script": { "type": "text/javascript", "exec": [
+              "if (pm.response.code === 200) {",
+              "  const j = pm.response.json();",
+              "  if (j.token) pm.collectionVariables.set('token', j.token);",
+              "  if (j.refresh_token) pm.collectionVariables.set('refresh_token', j.refresh_token);",
+              "}"
+            ] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/auth/refresh", "host": ["{{base_url}}"], "path": ["auth", "refresh"] },
+            "body": { "mode": "raw", "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}" }
+          }
+        },
+        {
+          "name": "Logout (204)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/auth/logout", "host": ["{{base_url}}"], "path": ["auth", "logout"] }
+          }
+        },
+        {
+          "name": "Password - Forgot",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/auth/password/forgot", "host": ["{{base_url}}"], "path": ["auth", "password", "forgot"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\"\n}" }
+          }
+        },
+        {
+          "name": "Password - Verify",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/auth/password/verify", "host": ["{{base_url}}"], "path": ["auth", "password", "verify"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"code\": \"{{code}}\"\n}" }
+          }
+        },
+        {
+          "name": "Password - Resend",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/auth/password/resend", "host": ["{{base_url}}"], "path": ["auth", "password", "resend"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\"\n}" }
+          }
+        },
+        {
+          "name": "Password - Reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/auth/password/reset", "host": ["{{base_url}}"], "path": ["auth", "password", "reset"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"newpassword123\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Storefront & Catalog (public)",
+      "item": [
+        {
+          "name": "Settings - App config",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" }
+            ],
+            "url": { "raw": "{{base_url}}/settings/app", "host": ["{{base_url}}"], "path": ["settings", "app"] }
+          }
+        },
+        {
+          "name": "Home banners",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" }
+            ],
+            "url": { "raw": "{{base_url}}/home/banners", "host": ["{{base_url}}"], "path": ["home", "banners"] }
+          }
+        },
+        {
+          "name": "Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" }
+            ],
+            "url": { "raw": "{{base_url}}/categories", "host": ["{{base_url}}"], "path": ["categories"] }
+          }
+        },
+        {
+          "name": "Products (list + filters)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products?category=&q=&newest=&page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "category", "value": "", "disabled": true },
+                { "key": "q", "value": "", "disabled": true },
+                { "key": "newest", "value": "true", "disabled": true },
+                { "key": "page", "value": "1", "disabled": true },
+                { "key": "per_page", "value": "20", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Product (single)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" }
+            ],
+            "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["products", "{{product_id}}"] }
+          }
+        },
+        {
+          "name": "Product reviews (list)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" }
+            ],
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/reviews", "host": ["{{base_url}}"], "path": ["products", "{{product_id}}", "reviews"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart (Bearer)",
+      "item": [
+        {
+          "name": "Get cart",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/cart", "host": ["{{base_url}}"], "path": ["cart"] }
+          }
+        },
+        {
+          "name": "Add to cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/cart", "host": ["{{base_url}}"], "path": ["cart"] },
+            "body": { "mode": "raw", "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"size\": \"M\",\n  \"color\": 4279371338,\n  \"quantity\": 2\n}" }
+          }
+        },
+        {
+          "name": "Update line quantity",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/cart/{{line_id}}", "host": ["{{base_url}}"], "path": ["cart", "{{line_id}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"quantity\": 3\n}" }
+          }
+        },
+        {
+          "name": "Remove line",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/cart/{{line_id}}", "host": ["{{base_url}}"], "path": ["cart", "{{line_id}}"] }
+          }
+        },
+        {
+          "name": "Clear cart",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/cart", "host": ["{{base_url}}"], "path": ["cart"] }
+          }
+        },
+        {
+          "name": "Apply promo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/cart/promo", "host": ["{{base_url}}"], "path": ["cart", "promo"] },
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"MODIST10\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Favorites (Bearer)",
+      "item": [
+        {
+          "name": "List favorites",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/favorites", "host": ["{{base_url}}"], "path": ["favorites"] }
+          }
+        },
+        {
+          "name": "Toggle favorite",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/favorites", "host": ["{{base_url}}"], "path": ["favorites"] },
+            "body": { "mode": "raw", "raw": "{\n  \"product_id\": \"{{product_id}}\"\n}" }
+          }
+        },
+        {
+          "name": "Clear favorites (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/favorites", "host": ["{{base_url}}"], "path": ["favorites"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews (Bearer write)",
+      "item": [
+        {
+          "name": "Create product review",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/products/{{product_id}}/reviews", "host": ["{{base_url}}"], "path": ["products", "{{product_id}}", "reviews"] },
+            "body": { "mode": "raw", "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Great product!\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkout (Bearer)",
+      "item": [
+        {
+          "name": "Checkout - cash",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/checkout", "host": ["{{base_url}}"], "path": ["checkout"] },
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 1800,\n  \"currency\": \"EGP\",\n  \"payment_method\": \"cash\",\n  \"address\": {\n    \"address\": \"12 Tahrir St\",\n    \"city\": \"Cairo\",\n    \"area\": \"Downtown\",\n    \"branch\": \"Main\"\n  }\n}" }
+          }
+        },
+        {
+          "name": "Checkout - credit card (token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/checkout", "host": ["{{base_url}}"], "path": ["checkout"] },
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 1800,\n  \"currency\": \"EGP\",\n  \"payment_method\": \"creditCard\",\n  \"address\": {\n    \"address\": \"12 Tahrir St\",\n    \"city\": \"Cairo\"\n  },\n  \"card\": {\n    \"payment_token\": \"tok_visa\"\n  }\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications (Bearer)",
+      "item": [
+        {
+          "name": "List notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/notifications", "host": ["{{base_url}}"], "path": ["notifications"] }
+          }
+        },
+        {
+          "name": "Mark all read",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/notifications/read", "host": ["{{base_url}}"], "path": ["notifications", "read"] }
+          }
+        },
+        {
+          "name": "Unread count",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/notifications/count", "host": ["{{base_url}}"], "path": ["notifications", "count"] }
+          }
+        },
+        {
+          "name": "Register device (204)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/notifications/devices", "host": ["{{base_url}}"], "path": ["notifications", "devices"] },
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<fcm_token>\",\n  \"platform\": \"android\"\n}" }
+          }
+        },
+        {
+          "name": "Unregister device (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/notifications/devices", "host": ["{{base_url}}"], "path": ["notifications", "devices"] },
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<fcm_token>\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile (Bearer)",
+      "item": [
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/me", "host": ["{{base_url}}"], "path": ["me"] }
+          }
+        },
+        {
+          "name": "Update me",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/me", "host": ["{{base_url}}"], "path": ["me"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Sara Ali\",\n  \"phone\": \"+201000000001\"\n}" }
+          }
+        },
+        {
+          "name": "My orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Accept-Language", "value": "{{locale}}" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/me/orders", "host": ["{{base_url}}"], "path": ["me", "orders"] }
+          }
+        }
+      ]
+    }
+  ]
+}

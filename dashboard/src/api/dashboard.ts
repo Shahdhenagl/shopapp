@@ -1,4 +1,4 @@
-import { USE_MOCK } from '@/lib/config';
+import { USE_MOCK, PENDING_MODULES_USE_MOCK } from '@/lib/config';
 import { apiClient } from './client';
 import type { DataEnvelope, Order } from '@/types';
 import { mockState, delay } from '@/mock/store';
@@ -58,7 +58,7 @@ function buildFromOrders(
 
 export const dashboardService = {
   async stats(): Promise<DashboardStats> {
-    if (USE_MOCK) {
+    if (USE_MOCK || PENDING_MODULES_USE_MOCK) {
       return delay(
         buildFromOrders(
           mockState.orders,

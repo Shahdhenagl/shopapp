@@ -1,4 +1,14 @@
 export { authService } from './auth';
+export {
+  adminAuthService,
+  settingsService,
+  adminCategoriesService,
+  adminProductsService,
+  uploadMedia,
+  flattenTree,
+  subtreeIds,
+} from './admin';
+export type { ProductQuery } from './admin';
 export { productsService } from './products';
 export { categoriesService } from './categories';
 export { ordersService } from './orders';
