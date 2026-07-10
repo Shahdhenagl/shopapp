@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use App\Domain\Auth\Mail\SendOtpMail;
 use App\Domain\Auth\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 
-it('registers an unverified user without a token and emails an OTP', function (): void {
-    Mail::fake();
+// Sign-up is instant (§4 / FLUTTER_INTEGRATION.md): register returns a flat
+// token pair immediately and the account starts UNVERIFIED — email verification
+// is a soft in-app nudge, never an OTP gate on sign-up or login.
 
+it('registers a user and returns a flat token pair, unverified', function (): void {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'John Doe',
         'email' => 'john@example.com',
@@ -18,62 +18,37 @@ it('registers an unverified user without a token and emails an OTP', function ()
     ], ['Accept' => 'application/json']);
 
     $response->assertStatus(201);
+    $response->assertJsonStructure([
+        'token',
+        'refresh_token',
+        'user' => ['id', 'name', 'email', 'phone', 'avatar_url'],
+    ]);
+    expect($response->json('token'))->not->toBeNull();
+    expect($response->json())->not->toHaveKey('data');
 
-    // NO token on register — sign-up is OTP-gated (§4).
-    expect($response->json())->not->toHaveKey('token');
-
+    // Instant sign-up: the account exists but is not yet verified.
     $this->assertDatabaseHas('users', ['email' => 'john@example.com', 'email_verified_at' => null]);
-
-    Mail::assertQueued(SendOtpMail::class, fn (SendOtpMail $mail): bool => $mail->purpose === 'email_verification');
 });
 
-it('verifies the sign-up OTP and returns a flat token and user', function (): void {
-    Mail::fake();
-
-    $this->postJson('/api/v1/auth/register', [
+it('signs the new user in immediately — the register token authenticates', function (): void {
+    $token = $this->postJson('/api/v1/auth/register', [
         'name' => 'Jane',
         'email' => 'jane@example.com',
         'phone' => '+201234567890',
         'password' => 'password123',
-    ], ['Accept' => 'application/json'])->assertStatus(201);
+    ], ['Accept' => 'application/json'])->assertStatus(201)->json('token');
 
-    $code = null;
-    Mail::assertQueued(SendOtpMail::class, function (SendOtpMail $mail) use (&$code): bool {
-        $code = $mail->code;
-
-        return true;
-    });
-
-    $response = $this->postJson('/api/v1/auth/register/verify', [
-        'email' => 'jane@example.com',
-        'code' => $code,
-    ], ['Accept' => 'application/json']);
-
-    $response->assertStatus(200);
-    $response->assertJsonStructure([
-        'token',
-        'user' => ['id', 'name', 'email', 'phone', 'avatar_url'],
-    ]);
-    expect($response->json('token'))->not->toBeNull();
-    $this->assertDatabaseMissing('users', ['email' => 'jane@example.com', 'email_verified_at' => null]);
+    $this->getJson('/api/v1/me', [
+        'Accept' => 'application/json',
+        'Authorization' => 'Bearer ' . $token,
+    ])->assertStatus(200)->assertJsonPath('data.email', 'jane@example.com');
 });
 
-it('rejects a wrong sign-up OTP with 422 and code otp.invalid', function (): void {
-    Mail::fake();
-
+it('rejects registration with a missing email', function (): void {
     $this->postJson('/api/v1/auth/register', [
-        'name' => 'Bad Code',
-        'email' => 'badcode@example.com',
+        'name' => 'No Email',
         'password' => 'password123',
-    ], ['Accept' => 'application/json'])->assertStatus(201);
-
-    $response = $this->postJson('/api/v1/auth/register/verify', [
-        'email' => 'badcode@example.com',
-        'code' => '0000',
-    ], ['Accept' => 'application/json']);
-
-    $response->assertStatus(422);
-    $response->assertJsonPath('code', 'otp.invalid');
+    ], ['Accept' => 'application/json'])->assertStatus(422);
 });
 
 it('conflicts (409) when registering a verified email', function (): void {
@@ -109,7 +84,7 @@ it('logs in with correct credentials returning a flat token and user', function 
     expect($response->json())->not->toHaveKey('data');
 });
 
-it('rejects login for an unverified account with 403', function (): void {
+it('allows login for an unverified account (verification is soft)', function (): void {
     User::factory()->unverified()->create([
         'email' => 'pending@b.com',
         'password' => Hash::make('password123'),
@@ -120,8 +95,8 @@ it('rejects login for an unverified account with 403', function (): void {
         'password' => 'password123',
     ], ['Accept' => 'application/json']);
 
-    $response->assertStatus(403);
-    $response->assertJsonPath('code', 'auth.email_not_verified');
+    $response->assertStatus(200);
+    expect($response->json('token'))->not->toBeNull();
 });
 
 it('rejects login with a wrong password', function (): void {
