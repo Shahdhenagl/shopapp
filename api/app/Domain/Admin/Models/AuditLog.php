@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class AuditLog extends Model
 {
-    public const string UPDATED_AT = null;
+    // Audit rows are immutable: only created_at is tracked. NB the constant is
+    // intentionally untyped — a typed `const string` cannot hold null (PHP 8.3
+    // fatals), which is exactly how Eloquent disables the updated_at column.
+    public const UPDATED_AT = null;
 
     protected $table = 'audit_logs';
 
