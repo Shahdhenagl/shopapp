@@ -6,6 +6,7 @@ namespace App\Domain\Checkout\Models;
 
 use App\Domain\Auth\Models\User;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -70,6 +71,11 @@ class Order extends Model
         'payment_status',
         'idempotency_key',
     ];
+
+    protected static function newFactory(): Factory
+    {
+        return \Database\Factories\OrderFactory::new();
+    }
 
     protected static function booted(): void
     {

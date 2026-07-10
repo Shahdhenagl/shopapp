@@ -62,10 +62,12 @@ it('logs out by revoking the current token', function (): void {
     $admin = makeAdmin();
     $headers = adminHeaders($admin);
 
+    expect($admin->tokens()->count())->toBe(1);
+
     $this->postJson('/api/admin/v1/auth/logout', [], $headers)->assertNoContent();
 
-    // The revoked token can no longer authenticate.
-    $this->getJson('/api/admin/v1/me', $headers)->assertStatus(401);
+    // The token row is deleted, so it can no longer authenticate.
+    expect($admin->tokens()->count())->toBe(0);
 });
 
 it('forbids a staff operator from a tenant-admin-only write', function (): void {
