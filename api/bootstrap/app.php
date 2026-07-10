@@ -31,8 +31,12 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Sanctum stateful middleware for SPA / first-party clients.
-        $middleware->statefulApi();
+        // Both clients — the Flutter app and the admin dashboard — authenticate
+        // with Sanctum personal-access (Bearer) tokens, never cookies/session.
+        // `statefulApi()` is intentionally NOT enabled: it would treat same-origin
+        // browser requests (the dashboard is served from the API's own domain) as
+        // first-party SPA calls and demand a CSRF token, breaking token logins
+        // with "CSRF token mismatch".
 
         // Resolve the request locale from the Accept-Language header (en|ar),
         // then the tenant (header / subdomain / default) so public routes are
