@@ -25,6 +25,22 @@ class Order extends Model
     public const string STATUS_SHIPPED = 'shipped';
     public const string STATUS_DELIVERED = 'delivered';
     public const string STATUS_CANCELLED = 'cancelled';
+    public const string STATUS_REFUNDED = 'refunded';
+
+    /**
+     * Allowed status transitions for the dashboard (§3.7). A terminal state
+     * (delivered / cancelled / refunded) has no onward moves.
+     *
+     * @var array<string, list<string>>
+     */
+    public const array STATUS_TRANSITIONS = [
+        self::STATUS_PENDING => [self::STATUS_PAID, self::STATUS_CANCELLED],
+        self::STATUS_PAID => [self::STATUS_SHIPPED, self::STATUS_CANCELLED, self::STATUS_REFUNDED],
+        self::STATUS_SHIPPED => [self::STATUS_DELIVERED, self::STATUS_REFUNDED],
+        self::STATUS_DELIVERED => [self::STATUS_REFUNDED],
+        self::STATUS_CANCELLED => [],
+        self::STATUS_REFUNDED => [],
+    ];
 
     public const string PAYMENT_METHOD_CARD = 'creditCard';
     public const string PAYMENT_METHOD_CASH = 'cash';
@@ -32,6 +48,7 @@ class Order extends Model
     public const string PAYMENT_PENDING = 'pending';
     public const string PAYMENT_PAID = 'paid';
     public const string PAYMENT_FAILED = 'failed';
+    public const string PAYMENT_REFUNDED = 'refunded';
 
     public $incrementing = false;
 
@@ -101,5 +118,18 @@ class Order extends Model
     public function address(): HasOne
     {
         return $this->hasOne(Address::class);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function allowedTransitions(): array
+    {
+        return self::STATUS_TRANSITIONS[$this->status] ?? [];
+    }
+
+    public function canTransitionTo(string $status): bool
+    {
+        return in_array($status, $this->allowedTransitions(), true);
     }
 }

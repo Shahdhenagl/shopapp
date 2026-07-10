@@ -12,10 +12,8 @@ export const ADMIN_API_BASE_URL =
 export const USE_MOCK =
   (import.meta.env.VITE_USE_MOCK ?? 'true').toLowerCase() !== 'false';
 
-// Modules whose admin API isn't built yet (Orders, Promos, Users, Dashboard
-// stats) stay on demo data even when USE_MOCK is false, so they don't 404.
-// Flip to false per-module as each real endpoint ships (Phase 2/3).
-export const PENDING_MODULES_USE_MOCK: boolean = true;
+// Every admin module (Orders, Promos, Customers, Dashboard KPIs included) now
+// has a real endpoint, so USE_MOCK=false wires the whole dashboard to the API.
 
 export const TOKEN_STORAGE_KEY = 'modist_admin_token';
 export const USER_STORAGE_KEY = 'modist_admin_user';

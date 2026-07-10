@@ -8,17 +8,22 @@ use App\Domain\Catalog\Contracts\AdminProductRepositoryInterface;
 use App\Domain\Catalog\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentAdminProductRepository implements AdminProductRepositoryInterface
 {
-    public function paginate(?string $search, ?string $categorySlug, int $perPage): LengthAwarePaginator
+    public function paginate(?string $search, ?string $categorySlug, ?string $status, int $perPage): LengthAwarePaginator
     {
         $query = Product::query()
             ->with(['images', 'colors', 'sizes']);
 
         if ($categorySlug !== null && $categorySlug !== '') {
             $query->where('category_id', $categorySlug);
+        }
+
+        if ($status !== null && $status !== '') {
+            $query->where('status', $status);
         }
 
         if ($search !== null && $search !== '') {
@@ -32,6 +37,16 @@ final class EloquentAdminProductRepository implements AdminProductRepositoryInte
         return $query
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
+    }
+
+    public function lowStock(int $threshold): Collection
+    {
+        return Product::query()
+            ->with(['images', 'colors', 'sizes'])
+            ->where('status', Product::STATUS_ACTIVE)
+            ->where('stock', '<=', $threshold)
+            ->orderBy('stock')
+            ->get();
     }
 
     public function find(string $id): ?Product

@@ -52,6 +52,14 @@ final readonly class UpdateProductAction
             $attrs['is_newest'] = $data['is_newest'];
         }
 
+        if (array_key_exists('status', $data)) {
+            $attrs['status'] = $data['status'];
+        }
+
+        if (array_key_exists('stock', $data)) {
+            $attrs['stock'] = $data['stock'];
+        }
+
         if (array_key_exists('name', $data)) {
             $attrs['name'] = $this->normalizeTranslatable($data['name']);
         }

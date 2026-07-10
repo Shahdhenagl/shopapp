@@ -12,8 +12,11 @@ final class EloquentReviewRepository implements ReviewRepositoryInterface
 {
     public function forProduct(string $productId): Collection
     {
+        // The public feed shows approved reviews only; pending/hidden ones are
+        // visible to moderators through the admin API.
         return ProductReview::query()
             ->where('product_id', $productId)
+            ->where('status', ProductReview::STATUS_APPROVED)
             ->latest()
             ->get();
     }
@@ -27,6 +30,7 @@ final class EloquentReviewRepository implements ReviewRepositoryInterface
     {
         $avg = ProductReview::query()
             ->where('product_id', $productId)
+            ->where('status', ProductReview::STATUS_APPROVED)
             ->avg('rating');
 
         return round((float) $avg, 1);

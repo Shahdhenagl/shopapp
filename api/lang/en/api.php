@@ -26,6 +26,12 @@ return [
     'category_not_empty' => 'This category still has sub-categories or products. Move or remove them first.',
     'product_category_invalid' => 'The selected category does not exist.',
     'product_category_not_leaf' => 'A product must be assigned to a leaf category (one with no sub-categories).',
+    'promo_code_taken' => 'A promo code with this value already exists.',
+    'banner_link_missing' => 'This link target requires a value.',
+    'banner_link_invalid' => 'The linked category or product no longer exists.',
+    'order_status_invalid_transition' => 'This order cannot move to that status.',
+    'notification_target_invalid' => 'No recipients match the selected target.',
+    'account_suspended' => 'This account has been suspended.',
 
     // Authentication
     'invalid_credentials' => 'The provided credentials are incorrect.',

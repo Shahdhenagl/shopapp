@@ -37,6 +37,8 @@ class UpdateProductRequest extends FormRequest
             'currency' => ['sometimes', 'nullable', 'string'],
             'is_newest' => ['sometimes', 'boolean'],
             'rating' => ['sometimes', 'nullable', 'numeric', 'between:0,5'],
+            'status' => ['sometimes', 'in:active,hidden'],
+            'stock' => ['sometimes', 'integer', 'min:0'],
 
             'category_id' => ['sometimes', 'required', 'string'],
 

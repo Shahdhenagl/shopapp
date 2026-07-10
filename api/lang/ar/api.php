@@ -26,6 +26,12 @@ return [
     'category_not_empty' => 'هذا التصنيف لا يزال يحتوي على تصنيفات فرعية أو منتجات. انقلها أو احذفها أولًا.',
     'product_category_invalid' => 'التصنيف المختار غير موجود.',
     'product_category_not_leaf' => 'يجب تعيين المنتج لتصنيف نهائي (ليس له تصنيفات فرعية).',
+    'promo_code_taken' => 'يوجد رمز خصم بنفس القيمة بالفعل.',
+    'banner_link_missing' => 'هدف الرابط هذا يتطلب قيمة.',
+    'banner_link_invalid' => 'التصنيف أو المنتج المرتبط لم يعد موجودًا.',
+    'order_status_invalid_transition' => 'لا يمكن نقل هذا الطلب إلى تلك الحالة.',
+    'notification_target_invalid' => 'لا يوجد مستلمون يطابقون الهدف المحدد.',
+    'account_suspended' => 'تم إيقاف هذا الحساب.',
 
     // المصادقة
     'invalid_credentials' => 'بيانات الاعتماد المقدمة غير صحيحة.',

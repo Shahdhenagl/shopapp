@@ -15,6 +15,13 @@ class ProductReview extends Model
     use BelongsToTenant;
     use HasUuids;
 
+    /** Moderation state — only `approved` reviews reach the storefront. */
+    public const string STATUS_PENDING = 'pending';
+
+    public const string STATUS_APPROVED = 'approved';
+
+    public const string STATUS_HIDDEN = 'hidden';
+
     /**
      * @var list<string>
      */
@@ -26,6 +33,7 @@ class ProductReview extends Model
         'author_name',
         'rating',
         'comment',
+        'status',
     ];
 
     /**

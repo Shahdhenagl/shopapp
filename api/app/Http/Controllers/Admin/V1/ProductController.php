@@ -36,6 +36,7 @@ class ProductController extends Controller
         $paginator = $this->products->paginate(
             $request->query('search'),
             $request->query('category'),
+            $request->query('status'),
             (int) $request->query('per_page', 15),
         );
 

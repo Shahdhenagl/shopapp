@@ -37,6 +37,8 @@ class StoreProductRequest extends FormRequest
             'currency' => ['nullable', 'string'],
             'is_newest' => ['boolean'],
             'rating' => ['nullable', 'numeric', 'between:0,5'],
+            'status' => ['nullable', 'in:active,hidden'],
+            'stock' => ['nullable', 'integer', 'min:0'],
 
             'category_id' => ['required', 'string'],
 

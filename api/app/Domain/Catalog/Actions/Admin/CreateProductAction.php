@@ -30,6 +30,8 @@ final readonly class CreateProductAction
             'currency' => $data['currency'] ?? config('app.currency', 'EGP'),
             'rating' => $data['rating'] ?? 0,
             'is_newest' => $data['is_newest'] ?? false,
+            'status' => $data['status'] ?? Product::STATUS_ACTIVE,
+            'stock' => $data['stock'] ?? 0,
             'name' => $this->normalizeTranslatable($data['name']),
             'style' => isset($data['style']) ? $this->normalizeTranslatable($data['style']) : null,
             'description' => isset($data['description']) ? $this->normalizeTranslatable($data['description']) : null,

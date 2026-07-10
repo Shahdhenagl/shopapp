@@ -6,12 +6,20 @@ namespace App\Domain\Catalog\Contracts;
 
 use App\Domain\Catalog\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 interface AdminProductRepositoryInterface
 {
-    public function paginate(?string $search, ?string $categorySlug, int $perPage): LengthAwarePaginator;
+    public function paginate(?string $search, ?string $categorySlug, ?string $status, int $perPage): LengthAwarePaginator;
 
     public function find(string $id): ?Product;
+
+    /**
+     * Active products at or below the given stock threshold, lowest first.
+     *
+     * @return Collection<int, Product>
+     */
+    public function lowStock(int $threshold): Collection;
 
     /**
      * @param  array<string, mixed>  $attrs

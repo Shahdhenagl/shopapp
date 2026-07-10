@@ -27,13 +27,17 @@ final class EloquentProductRepository implements ProductRepositoryInterface
     {
         return Product::query()
             ->with(['images', 'colors', 'sizes', 'category'])
+            ->where('status', Product::STATUS_ACTIVE)
             ->find($id);
     }
 
     private function query(ProductFilter $filter): Builder
     {
+        // The storefront only ever sees published products; hidden ones are
+        // dashboard-only until the operator flips them active.
         $query = Product::query()
-            ->with(['images', 'colors', 'sizes', 'category']);
+            ->with(['images', 'colors', 'sizes', 'category'])
+            ->where('status', Product::STATUS_ACTIVE);
 
         if ($filter->hasCategory()) {
             $query->where('category_id', $filter->categoryId);

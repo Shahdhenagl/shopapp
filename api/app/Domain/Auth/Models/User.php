@@ -24,6 +24,11 @@ class User extends Authenticatable
     use HasFactory;
     use Notifiable;
 
+    /** Account state — a suspended user is refused at login (§3.10). */
+    public const string STATUS_ACTIVE = 'active';
+
+    public const string STATUS_SUSPENDED = 'suspended';
+
     /**
      * @var list<string>
      */
@@ -33,6 +38,7 @@ class User extends Authenticatable
         'phone',
         'password',
         'avatar_url',
+        'status',
     ];
 
     /**
@@ -52,6 +58,11 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status === self::STATUS_SUSPENDED;
     }
 
     protected static function newFactory(): Factory

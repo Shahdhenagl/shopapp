@@ -3,9 +3,8 @@ import type { OrderStatus, PaymentStatus } from '@/types';
 type Tone = 'gray' | 'green' | 'red' | 'yellow' | 'blue' | 'purple' | 'orange';
 
 export const ORDER_STATUSES: OrderStatus[] = [
-  'pending_payment',
+  'pending',
   'paid',
-  'processing',
   'shipped',
   'delivered',
   'cancelled',
@@ -14,12 +13,10 @@ export const ORDER_STATUSES: OrderStatus[] = [
 
 export function orderStatusTone(status: OrderStatus): Tone {
   switch (status) {
-    case 'pending_payment':
+    case 'pending':
       return 'yellow';
     case 'paid':
       return 'blue';
-    case 'processing':
-      return 'purple';
     case 'shipped':
       return 'orange';
     case 'delivered':
@@ -35,7 +32,7 @@ export function paymentStatusTone(status: PaymentStatus): Tone {
   switch (status) {
     case 'paid':
       return 'green';
-    case 'unpaid':
+    case 'pending':
       return 'yellow';
     case 'failed':
       return 'red';

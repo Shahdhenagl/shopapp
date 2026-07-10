@@ -23,6 +23,8 @@ class AdminProductResource extends JsonResource
             'currency' => $this->currency,
             'rating' => (float) $this->rating,
             'is_newest' => (bool) $this->is_newest,
+            'status' => $this->status,
+            'stock' => (int) $this->stock,
             'category_id' => $this->category_id,
             'images' => $this->images->pluck('url')->values(),
             'sizes' => $this->sizes->pluck('size')->values(),

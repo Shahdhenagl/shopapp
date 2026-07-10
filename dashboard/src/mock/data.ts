@@ -123,11 +123,11 @@ function makeOrder(
 
 export const seedOrders: Order[] = [
   makeOrder('o1', '7', 'Sara Ahmed', 'paid', 'paid', 1, 'MODIST10'),
-  makeOrder('o2', '8', 'Omar Khaled', 'pending_payment', 'unpaid', 2, null),
+  makeOrder('o2', '8', 'Omar Khaled', 'pending', 'pending', 2, null),
   makeOrder('o3', '9', 'Layla Hassan', 'shipped', 'paid', 4, 'WELCOME15'),
   makeOrder('o4', '10', 'Youssef Ali', 'delivered', 'paid', 7, null),
   makeOrder('o5', '7', 'Sara Ahmed', 'cancelled', 'refunded', 9, null),
-  makeOrder('o6', '8', 'Omar Khaled', 'processing', 'paid', 11, 'MODIST10'),
+  makeOrder('o6', '8', 'Omar Khaled', 'paid', 'paid', 11, 'MODIST10'),
   makeOrder('o7', '9', 'Layla Hassan', 'paid', 'paid', 14, null),
 ];
 

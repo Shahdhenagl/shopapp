@@ -1,5 +1,5 @@
-import { apiClient } from './client';
-import { USE_MOCK, PENDING_MODULES_USE_MOCK } from '@/lib/config';
+import { adminClient } from './client';
+import { USE_MOCK } from '@/lib/config';
 import type { DataEnvelope, PromoCode } from '@/types';
 import { mockState, delay, nextId } from '@/mock/store';
 
@@ -9,13 +9,13 @@ export type PromoInput = Omit<PromoCode, 'id' | 'used_count'> & {
 
 export const promosService = {
   async list(): Promise<PromoCode[]> {
-    if (USE_MOCK || PENDING_MODULES_USE_MOCK) return delay([...mockState.promos]);
-    const { data } = await apiClient.get<DataEnvelope<PromoCode[]>>('/promos');
+    if (USE_MOCK) return delay([...mockState.promos]);
+    const { data } = await adminClient.get<DataEnvelope<PromoCode[]>>('/promos');
     return data.data;
   },
 
   async create(input: PromoInput): Promise<PromoCode> {
-    if (USE_MOCK || PENDING_MODULES_USE_MOCK) {
+    if (USE_MOCK) {
       const promo: PromoCode = {
         ...input,
         code: input.code.toUpperCase(),
@@ -25,7 +25,7 @@ export const promosService = {
       mockState.promos.push(promo);
       return delay(promo);
     }
-    const { data } = await apiClient.post<DataEnvelope<PromoCode>>(
+    const { data } = await adminClient.post<DataEnvelope<PromoCode>>(
       '/promos',
       input,
     );
@@ -33,7 +33,7 @@ export const promosService = {
   },
 
   async update(id: string, input: PromoInput): Promise<PromoCode> {
-    if (USE_MOCK || PENDING_MODULES_USE_MOCK) {
+    if (USE_MOCK) {
       const idx = mockState.promos.findIndex((p) => p.id === id);
       if (idx === -1) throw { response: { status: 404 } };
       mockState.promos[idx] = {
@@ -44,7 +44,7 @@ export const promosService = {
       };
       return delay(mockState.promos[idx]);
     }
-    const { data } = await apiClient.put<DataEnvelope<PromoCode>>(
+    const { data } = await adminClient.patch<DataEnvelope<PromoCode>>(
       `/promos/${id}`,
       input,
     );
@@ -52,13 +52,13 @@ export const promosService = {
   },
 
   async toggleActive(id: string, active: boolean): Promise<PromoCode> {
-    if (USE_MOCK || PENDING_MODULES_USE_MOCK) {
+    if (USE_MOCK) {
       const idx = mockState.promos.findIndex((p) => p.id === id);
       if (idx === -1) throw { response: { status: 404 } };
       mockState.promos[idx] = { ...mockState.promos[idx], active };
       return delay(mockState.promos[idx]);
     }
-    const { data } = await apiClient.patch<DataEnvelope<PromoCode>>(
+    const { data } = await adminClient.patch<DataEnvelope<PromoCode>>(
       `/promos/${id}`,
       { active },
     );
@@ -66,11 +66,11 @@ export const promosService = {
   },
 
   async remove(id: string): Promise<void> {
-    if (USE_MOCK || PENDING_MODULES_USE_MOCK) {
+    if (USE_MOCK) {
       mockState.promos = mockState.promos.filter((p) => p.id !== id);
       await delay(null, 200);
       return;
     }
-    await apiClient.delete(`/promos/${id}`);
+    await adminClient.delete(`/promos/${id}`);
   },
 };

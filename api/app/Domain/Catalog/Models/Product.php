@@ -24,6 +24,11 @@ class Product extends Model
     use HasUuids;
     use SoftDeletes;
 
+    /** Publish state — only `active` products reach the storefront. */
+    public const string STATUS_ACTIVE = 'active';
+
+    public const string STATUS_HIDDEN = 'hidden';
+
     /**
      * @var list<string>
      */
@@ -35,6 +40,8 @@ class Product extends Model
         'currency',
         'rating',
         'is_newest',
+        'status',
+        'stock',
         'name',
         'style',
         'description',
@@ -58,7 +65,19 @@ class Product extends Model
             'price' => 'decimal:2',
             'rating' => 'decimal:1',
             'is_newest' => 'boolean',
+            'stock' => 'integer',
         ];
+    }
+
+    /**
+     * Only approved reviews count toward the public aggregate rating.
+     *
+     * @return HasMany<ProductReview, $this>
+     */
+    public function approvedReviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class)
+            ->where('status', ProductReview::STATUS_APPROVED);
     }
 
     protected static function newFactory(): Factory

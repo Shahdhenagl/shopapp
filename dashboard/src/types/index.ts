@@ -188,16 +188,16 @@ export interface Category {
   sort_order?: number;
 }
 
+// Mirrors the backend Order status machine (Order::STATUS_*).
 export type OrderStatus =
-  | 'pending_payment'
+  | 'pending'
   | 'paid'
-  | 'processing'
   | 'shipped'
   | 'delivered'
   | 'cancelled'
   | 'refunded';
 
-export type PaymentStatus = 'unpaid' | 'paid' | 'failed' | 'refunded';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 
 export interface OrderItem {
   id: string;
