@@ -17,5 +17,12 @@ interface AdminCustomerRepositoryInterface
 
     public function find(string $id): ?User;
 
+    /**
+     * Create an app customer in the current tenant.
+     *
+     * @param  array<string, mixed>  $attrs
+     */
+    public function create(array $attrs): User;
+
     public function updateStatus(User $user, string $status): User;
 }

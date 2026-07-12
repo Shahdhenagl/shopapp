@@ -9,8 +9,10 @@ use App\Domain\Admin\Support\AuditLogger;
 use App\Domain\Auth\Contracts\AdminCustomerRepositoryInterface;
 use App\Domain\Auth\Models\User;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\V1\Customers\StoreCustomerRequest;
 use App\Http\Requests\Admin\V1\Customers\UpdateCustomerStatusRequest;
 use App\Http\Resources\Admin\AdminCustomerResource;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -31,6 +33,31 @@ class CustomerController extends Controller
         );
 
         return AdminCustomerResource::collection($paginator);
+    }
+
+    public function store(StoreCustomerRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+
+        // Operator-created accounts are trusted, so mark the email verified
+        // (otherwise the customer would hit the checkout email gate).
+        $customer = $this->customers->create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+            'password' => $data['password'],
+            'email_verified_at' => now(),
+        ]);
+
+        $this->audit->log(
+            $this->actor($request),
+            'customer.created',
+            $customer,
+            null,
+            AdminCustomerResource::make($customer)->resolve($request),
+        );
+
+        return AdminCustomerResource::make($customer)->response()->setStatusCode(201);
     }
 
     public function show(string $id): AdminCustomerResource

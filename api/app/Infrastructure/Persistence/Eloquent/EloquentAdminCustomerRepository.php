@@ -33,6 +33,13 @@ final class EloquentAdminCustomerRepository implements AdminCustomerRepositoryIn
         return User::query()->withCount('orders')->find($id);
     }
 
+    public function create(array $attrs): User
+    {
+        // tenant_id is stamped by the BelongsToTenant trait; password is hashed
+        // by the model cast.
+        return User::query()->create($attrs);
+    }
+
     public function updateStatus(User $user, string $status): User
     {
         $user->status = $status;

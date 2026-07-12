@@ -1,7 +1,14 @@
 import { adminClient } from './client';
 import { USE_MOCK } from '@/lib/config';
 import type { DataEnvelope, Paginated, User } from '@/types';
-import { mockState, delay } from '@/mock/store';
+import { mockState, delay, nextId } from '@/mock/store';
+
+export interface CustomerInput {
+  name: string;
+  email: string;
+  phone?: string | null;
+  password: string;
+}
 
 export const usersService = {
   async list(): Promise<User[]> {
@@ -9,6 +16,25 @@ export const usersService = {
     const { data } = await adminClient.get<Paginated<User>>('/customers', {
       params: { per_page: 100 },
     });
+    return data.data;
+  },
+
+  async create(input: CustomerInput): Promise<User> {
+    if (USE_MOCK) {
+      const user: User = {
+        id: nextId('u', mockState.users),
+        name: input.name,
+        email: input.email,
+        phone: input.phone ?? null,
+        avatar_url: null,
+      };
+      mockState.users.push(user);
+      return delay(user);
+    }
+    const { data } = await adminClient.post<DataEnvelope<User>>(
+      '/customers',
+      input,
+    );
     return data.data;
   },
 

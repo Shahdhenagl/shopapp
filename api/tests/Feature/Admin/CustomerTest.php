@@ -4,6 +4,35 @@ declare(strict_types=1);
 
 use App\Domain\Auth\Models\User;
 
+it('creates an app customer (verified) from the dashboard', function (): void {
+    $response = $this->postJson('/api/admin/v1/customers', [
+        'name' => 'Walk In',
+        'email' => 'walkin@test.dev',
+        'phone' => '+201234567890',
+        'password' => 'password123',
+    ], adminHeaders());
+
+    $response->assertStatus(201);
+    $response->assertJsonPath('data.email', 'walkin@test.dev');
+    $response->assertJsonPath('data.email_verified', true);
+    $this->assertDatabaseHas('users', ['email' => 'walkin@test.dev', 'status' => 'active']);
+});
+
+it('rejects a duplicate customer email in the same tenant', function (): void {
+    User::factory()->create(['email' => 'dup@test.dev']);
+
+    $this->postJson('/api/admin/v1/customers', [
+        'name' => 'Dup', 'email' => 'dup@test.dev', 'password' => 'password123',
+    ], adminHeaders())->assertStatus(422);
+});
+
+it('forbids staff from creating a customer', function (): void {
+    $this->postJson('/api/admin/v1/customers', [
+        'name' => 'X', 'email' => 'x@test.dev', 'password' => 'password123',
+    ], adminHeaders(makeAdmin(\App\Domain\Admin\Models\AdminUser::ROLE_STAFF)))
+        ->assertStatus(403);
+});
+
 it('lists app customers with order counts', function (): void {
     User::factory()->create(['name' => 'Sara Ahmed']);
 

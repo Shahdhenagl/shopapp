@@ -98,7 +98,8 @@ Route::prefix('admin/v1')->group(function (): void {
             // Notifications broadcast
             Route::post('notifications', [NotificationController::class, 'store']);
 
-            // Customers (suspend / reactivate)
+            // Customers (create / suspend / reactivate)
+            Route::post('customers', [CustomerController::class, 'store']);
             Route::patch('customers/{id}', [CustomerController::class, 'update']);
         });
     });
