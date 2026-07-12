@@ -10,6 +10,11 @@ interface UserRepositoryInterface
 {
     public function findByEmail(string $email): ?User;
 
+    /**
+     * Find a user by their linked social identity (provider + provider id).
+     */
+    public function findByProvider(string $provider, string $providerId): ?User;
+
     public function findById(int|string $id): ?User;
 
     /**

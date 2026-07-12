@@ -10,12 +10,14 @@ use App\Domain\Auth\Actions\LogoutAction;
 use App\Domain\Auth\Actions\RefreshAccessTokenAction;
 use App\Domain\Auth\Actions\RegisterAction;
 use App\Domain\Auth\Actions\SendEmailVerificationAction;
+use App\Domain\Auth\Actions\SocialLoginAction;
 use App\Domain\Auth\Models\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\ConfirmEmailRequest;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
 use App\Http\Requests\Api\V1\Auth\RefreshTokenRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
+use App\Http\Requests\Api\V1\Auth\SocialLoginRequest;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,7 +32,26 @@ class AuthController extends Controller
         private readonly RefreshAccessTokenAction $refreshAccessTokenAction,
         private readonly SendEmailVerificationAction $sendEmailVerificationAction,
         private readonly ConfirmEmailVerificationAction $confirmEmailVerificationAction,
+        private readonly SocialLoginAction $socialLoginAction,
     ) {
+    }
+
+    /**
+     * Sign in (or sign up) with a Facebook / Google token obtained by the app's
+     * social SDK. Returns the same flat token pair + user as login.
+     */
+    public function social(SocialLoginRequest $request): JsonResponse
+    {
+        $result = $this->socialLoginAction->execute(
+            $request->validated('provider'),
+            $request->validated('token'),
+        );
+
+        return response()->json([
+            'token' => $result->token,
+            'refresh_token' => $result->refreshToken,
+            'user' => UserResource::make($result->user)->resolve($request),
+        ], 200);
     }
 
     /**

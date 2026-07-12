@@ -14,6 +14,14 @@ final class EloquentUserRepository implements UserRepositoryInterface
         return User::query()->where('email', $email)->first();
     }
 
+    public function findByProvider(string $provider, string $providerId): ?User
+    {
+        return User::query()
+            ->where('provider', $provider)
+            ->where('provider_id', $providerId)
+            ->first();
+    }
+
     public function findById(int|string $id): ?User
     {
         return User::query()->find($id);

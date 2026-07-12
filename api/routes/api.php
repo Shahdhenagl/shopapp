@@ -32,6 +32,10 @@ Route::prefix('v1')->group(function (): void {
         Route::post('login', [AuthController::class, 'login'])
             ->middleware('throttle:auth');
 
+        // Social sign-in (Facebook / Google) — verifies the provider token.
+        Route::post('social', [AuthController::class, 'social'])
+            ->middleware('throttle:auth');
+
         Route::post('refresh', [AuthController::class, 'refresh'])
             ->middleware('throttle:auth');
 
