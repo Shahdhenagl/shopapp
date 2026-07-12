@@ -15,7 +15,7 @@ it('adds an item to the cart', function (): void {
     $product = Product::factory()->create();
 
     $response = $this->postJson('/api/v1/cart', [
-        'product_id' => $product->id,
+        'product_id' => (string) $product->id,
         'size' => 'M',
         'color' => 4279371338,
         'quantity' => 2,
@@ -33,7 +33,7 @@ it('merges quantity when the same line is added twice', function (): void {
     $product = Product::factory()->create();
 
     $payload = [
-        'product_id' => $product->id,
+        'product_id' => (string) $product->id,
         'size' => 'M',
         'color' => 4279371338,
         'quantity' => 2,

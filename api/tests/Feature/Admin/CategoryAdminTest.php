@@ -7,7 +7,7 @@ use App\Domain\Catalog\Models\Product;
 
 it('returns the category tree with leaf + product-count flags', function (): void {
     $parent = Category::query()->create(['slug' => 'clothing', 'name' => ['en' => 'Clothing', 'ar' => 'ملابس'], 'sort_order' => 0]);
-    Category::query()->create(['slug' => 'tees', 'parent_id' => $parent->id, 'name' => ['en' => 'Tees', 'ar' => 'تيشيرت'], 'sort_order' => 0]);
+    Category::query()->create(['slug' => 'tees', 'parent_id' => (string) $parent->id, 'name' => ['en' => 'Tees', 'ar' => 'تيشيرت'], 'sort_order' => 0]);
 
     $response = $this->getJson('/api/admin/v1/categories', adminHeaders());
 
@@ -29,7 +29,7 @@ it('creates a child under a parent', function (): void {
 
     $this->postJson('/api/admin/v1/categories', [
         'name' => ['en' => 'Kitchen', 'ar' => 'مطبخ'],
-        'parent_id' => $parent->id,
+        'parent_id' => (string) $parent->id,
     ], adminHeaders())->assertStatus(201)
         ->assertJsonPath('data.parent_id', (string) $parent->id);
 });
@@ -39,13 +39,13 @@ it('prevents a reparent cycle (§7.4)', function (): void {
     $b = Category::query()->create(['slug' => 'b', 'parent_id' => $a->id, 'name' => ['en' => 'B', 'ar' => 'ب'], 'sort_order' => 0]);
 
     // Making A a child of its own descendant B must be rejected.
-    $this->patchJson("/api/admin/v1/categories/{$a->id}", ['parent_id' => $b->id], adminHeaders())
+    $this->patchJson("/api/admin/v1/categories/{$a->id}", ['parent_id' => (string) $b->id], adminHeaders())
         ->assertStatus(422);
 });
 
 it('blocks deleting a category that still has children (§7.5)', function (): void {
     $parent = Category::query()->create(['slug' => 'p', 'name' => ['en' => 'P', 'ar' => 'ب'], 'sort_order' => 0]);
-    Category::query()->create(['slug' => 'c', 'parent_id' => $parent->id, 'name' => ['en' => 'C', 'ar' => 'ج'], 'sort_order' => 0]);
+    Category::query()->create(['slug' => 'c', 'parent_id' => (string) $parent->id, 'name' => ['en' => 'C', 'ar' => 'ج'], 'sort_order' => 0]);
 
     $this->deleteJson("/api/admin/v1/categories/{$parent->id}", [], adminHeaders())->assertStatus(422);
 });
@@ -66,7 +66,7 @@ it('soft-deletes an empty category', function (): void {
 
 it('cascade-deletes a subtree when asked', function (): void {
     $parent = Category::query()->create(['slug' => 'root', 'name' => ['en' => 'R', 'ar' => 'ج'], 'sort_order' => 0]);
-    $child = Category::query()->create(['slug' => 'child', 'parent_id' => $parent->id, 'name' => ['en' => 'C', 'ar' => 'ط'], 'sort_order' => 0]);
+    $child = Category::query()->create(['slug' => 'child', 'parent_id' => (string) $parent->id, 'name' => ['en' => 'C', 'ar' => 'ط'], 'sort_order' => 0]);
 
     $this->deleteJson("/api/admin/v1/categories/{$parent->id}?cascade=1", [], adminHeaders())->assertNoContent();
     $this->assertSoftDeleted('categories', ['id' => $parent->id]);

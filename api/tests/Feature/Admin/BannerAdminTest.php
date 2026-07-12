@@ -43,7 +43,7 @@ it('creates a banner linking to a live product', function (): void {
     $this->postJson('/api/admin/v1/banners', [
         'image_url' => 'https://cdn.test/hero.jpg',
         'link_type' => 'product',
-        'link_value' => $product->id,
+        'link_value' => (string) $product->id,
     ], adminHeaders())->assertStatus(201);
 });
 

@@ -13,8 +13,8 @@ it('hides non-active products from the storefront list', function (): void {
 
     $response->assertStatus(200);
     $ids = collect($response->json('data'))->pluck('id');
-    expect($ids)->toContain($active->id);
-    expect($ids)->not->toContain($hidden->id);
+    expect($ids)->toContain((string) $active->id);
+    expect($ids)->not->toContain((string) $hidden->id);
 });
 
 it('returns 404 for a hidden product detail', function (): void {

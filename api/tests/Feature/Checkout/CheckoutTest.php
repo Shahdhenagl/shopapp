@@ -15,7 +15,7 @@ it('checks out a cash order and empties the cart', function (): void {
     $product = Product::factory()->create();
 
     $this->postJson('/api/v1/cart', [
-        'product_id' => $product->id,
+        'product_id' => (string) $product->id,
         'size' => 'M',
         'color' => 4279371338,
         'quantity' => 1,
@@ -48,7 +48,7 @@ it('checks out a credit card order and marks it paid', function (): void {
     $product = Product::factory()->create();
 
     $this->postJson('/api/v1/cart', [
-        'product_id' => $product->id,
+        'product_id' => (string) $product->id,
         'size' => 'M',
         'color' => 4279371338,
         'quantity' => 1,

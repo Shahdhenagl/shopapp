@@ -11,7 +11,12 @@ final class EloquentFavoriteRepository implements FavoriteRepositoryInterface
 {
     public function idsForUser(User $user): array
     {
-        return $user->favorites()->pluck('products.id')->all();
+        // The wire contract keeps all ids as strings, so cast the (now bigint)
+        // product ids to string.
+        return $user->favorites()
+            ->pluck('products.id')
+            ->map(static fn ($id): string => (string) $id)
+            ->all();
     }
 
     public function toggle(User $user, string $productId): array

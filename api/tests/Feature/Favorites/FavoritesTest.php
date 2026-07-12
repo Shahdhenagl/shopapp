@@ -21,15 +21,15 @@ it('toggles a favorite on and off', function (): void {
     $product = Product::factory()->create();
 
     $response = $this->postJson('/api/v1/favorites', [
-        'product_id' => $product->id,
+        'product_id' => (string) $product->id,
     ], ['Accept' => 'application/json']);
 
     $response->assertStatus(200);
-    expect($response->json('data'))->toContain($product->id);
+    expect($response->json('data'))->toContain((string) $product->id);
 
     // Toggling again removes it.
     $response = $this->postJson('/api/v1/favorites', [
-        'product_id' => $product->id,
+        'product_id' => (string) $product->id,
     ], ['Accept' => 'application/json']);
 
     $response->assertStatus(200);
@@ -40,7 +40,7 @@ it('clears all favorites', function (): void {
     $product = Product::factory()->create();
 
     $this->postJson('/api/v1/favorites', [
-        'product_id' => $product->id,
+        'product_id' => (string) $product->id,
     ], ['Accept' => 'application/json'])->assertStatus(200);
 
     $response = $this->deleteJson('/api/v1/favorites', [], ['Accept' => 'application/json']);
