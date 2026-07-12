@@ -17,7 +17,7 @@ interface AdminCategoryRepositoryInterface
      */
     public function tree(): Collection;
 
-    public function find(string $id): ?Category;
+    public function find(int|string $id): ?Category;
 
     /**
      * @param  array<string, mixed>  $attributes
