@@ -13,7 +13,7 @@ return new class extends Migration
         Schema::create('product_reviews', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained()->cascadeOnDelete();
-            $table->foreignUuid('product_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             // Nullable so a review survives the author's account deletion; the
             // snapshotted author_name still renders (or the client shows
             // "Anonymous" when both are absent). See BACKEND.md §6.3b.

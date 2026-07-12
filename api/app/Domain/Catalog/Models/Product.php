@@ -6,7 +6,6 @@ namespace App\Domain\Catalog\Models;
 
 use App\Domain\Auth\Models\User;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,7 +20,6 @@ class Product extends Model
     use BelongsToTenant;
     use HasFactory;
     use HasTranslations;
-    use HasUuids;
     use SoftDeletes;
 
     /** Publish state — only `active` products reach the storefront. */

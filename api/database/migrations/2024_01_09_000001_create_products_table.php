@@ -11,7 +11,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table): void {
-            $table->uuid('id')->primary();
+            // Simple auto-incrementing id (1, 2, 3…) — the app treats every id as
+            // an opaque string, so "1" is a valid product id on the wire.
+            $table->id();
             $table->foreignUuid('tenant_id')->constrained()->cascadeOnDelete();
             // Stores the category slug (the per-tenant identifier). No DB FK to
             // categories because that key is now a surrogate UUID; integrity is

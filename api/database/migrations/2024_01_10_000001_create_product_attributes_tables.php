@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('product_images', function (Blueprint $table): void {
             $table->id();
-            $table->foreignUuid('product_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('url');
             $table->integer('position')->default(0);
             $table->index('product_id');
@@ -20,14 +20,14 @@ return new class extends Migration
 
         Schema::create('product_colors', function (Blueprint $table): void {
             $table->id();
-            $table->foreignUuid('product_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->unsignedBigInteger('color_value');
             $table->integer('position')->default(0);
         });
 
         Schema::create('product_sizes', function (Blueprint $table): void {
             $table->id();
-            $table->foreignUuid('product_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('size');
             $table->integer('position')->default(0);
         });

@@ -23,7 +23,7 @@ return new class extends Migration
         Schema::create('cart_items', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('cart_id')->constrained()->cascadeOnDelete();
-            $table->foreignUuid('product_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('size');
             $table->unsignedBigInteger('color_value');
             $table->unsignedInteger('quantity')->default(1);

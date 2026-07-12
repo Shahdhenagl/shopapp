@@ -31,7 +31,7 @@ return new class extends Migration
             $table->id();
             $table->string('order_id');
             $table->foreign('order_id')->references('id')->on('orders')->cascadeOnDelete();
-            $table->uuid('product_id')->nullable();
+            $table->unsignedBigInteger('product_id')->nullable();
             $table->string('name_snapshot');
             $table->string('size');
             $table->unsignedBigInteger('color_value');
