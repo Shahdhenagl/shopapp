@@ -11,6 +11,7 @@ import { Products } from '@/pages/products/Products';
 import { Categories } from '@/pages/Categories';
 import { Orders } from '@/pages/Orders';
 import { Promos } from '@/pages/Promos';
+import { Banners } from '@/pages/Banners';
 import { Users } from '@/pages/Users';
 import { Settings } from '@/pages/Settings';
 import { NotFound } from '@/pages/NotFound';
@@ -34,6 +35,7 @@ export default function App() {
             <Route path="/categories" element={<Categories />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/promos" element={<Promos />} />
+            <Route path="/banners" element={<Banners />} />
             <Route path="/users" element={<Users />} />
             <Route path="/settings" element={<Settings />} />
           </Route>

@@ -226,6 +226,39 @@ export interface Order {
   shipping_address?: string | null;
 }
 
+// ---------------------------------------------------------------------------
+// Banners (GET/POST/PATCH/DELETE /admin/v1/banners) — hero carousel editor.
+// ---------------------------------------------------------------------------
+
+export type BannerLinkType = 'none' | 'category' | 'product' | 'url';
+
+export interface AdminBanner {
+  id: string;
+  image_url: string;
+  title: string | null;
+  subtitle: string | null;
+  cta_text: string | null;
+  link_type: BannerLinkType;
+  link_value: string | null;
+  sort_order: number;
+  is_active: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+}
+
+export interface AdminBannerInput {
+  image_url: string;
+  title?: string | null;
+  subtitle?: string | null;
+  cta_text?: string | null;
+  link_type: BannerLinkType;
+  link_value?: string | null;
+  sort_order?: number;
+  is_active?: boolean;
+  starts_at?: string | null;
+  ends_at?: string | null;
+}
+
 export type PromoType = 'percent' | 'fixed';
 
 export interface PromoCode {

@@ -13,6 +13,7 @@ export { productsService } from './products';
 export { categoriesService } from './categories';
 export { ordersService } from './orders';
 export { promosService } from './promos';
+export { bannersService } from './banners';
 export { usersService } from './users';
 export { profileService } from './profile';
 export { favoritesService } from './favorites';

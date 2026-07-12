@@ -5,6 +5,7 @@ import {
   Tags,
   ShoppingCart,
   Ticket,
+  Image,
   Users,
   Settings,
   X,
@@ -18,6 +19,7 @@ const items = [
   { to: '/categories', key: 'nav_categories', icon: Tags },
   { to: '/orders', key: 'nav_orders', icon: ShoppingCart },
   { to: '/promos', key: 'nav_promos', icon: Ticket },
+  { to: '/banners', key: 'nav_banners', icon: Image },
   { to: '/users', key: 'nav_users', icon: Users },
   { to: '/settings', key: 'nav_settings', icon: Settings },
 ];
