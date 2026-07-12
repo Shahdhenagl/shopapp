@@ -41,7 +41,11 @@ final class TenantContext
 
     public function id(): ?string
     {
-        return $this->tenant()?->id;
+        // Tenant ids are bigints now; the app treats tenant ids as strings
+        // everywhere (columns coerce "1" fine), so normalise to a string.
+        $id = $this->tenant()?->id;
+
+        return $id === null ? null : (string) $id;
     }
 
     public function hasTenant(): bool
