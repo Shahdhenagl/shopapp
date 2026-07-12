@@ -27,6 +27,8 @@ class Address extends Model
         'branch',
         'phone',
         'is_default',
+        'latitude',
+        'longitude',
     ];
 
     /**
@@ -36,6 +38,8 @@ class Address extends Model
     {
         return [
             'is_default' => 'boolean',
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
         ];
     }
 

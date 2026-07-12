@@ -26,6 +26,8 @@ class UpdateAddressRequest extends FormRequest
             'branch' => ['sometimes', 'nullable', 'string'],
             'phone' => ['sometimes', 'nullable', 'string'],
             'is_default' => ['sometimes', 'boolean'],
+            'latitude' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],
         ];
     }
 }

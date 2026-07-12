@@ -26,6 +26,9 @@ class StoreAddressRequest extends FormRequest
             'branch' => ['nullable', 'string'],
             'phone' => ['nullable', 'string'],
             'is_default' => ['nullable', 'boolean'],
+            // Optional map-picked geo point (omitted for a hand-typed address).
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
         ];
     }
 

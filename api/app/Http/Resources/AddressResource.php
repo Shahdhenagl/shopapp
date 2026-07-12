@@ -26,6 +26,8 @@ class AddressResource extends JsonResource
             'branch' => $this->branch,
             'phone' => $this->phone,
             'is_default' => (bool) $this->is_default,
+            'latitude' => $this->latitude !== null ? (float) $this->latitude : null,
+            'longitude' => $this->longitude !== null ? (float) $this->longitude : null,
         ];
     }
 }
