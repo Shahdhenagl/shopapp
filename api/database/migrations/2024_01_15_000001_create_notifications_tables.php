@@ -11,8 +11,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('notifications', function (Blueprint $table): void {
-            $table->uuid('id')->primary();
-            $table->foreignUuid('tenant_id')->constrained()->cascadeOnDelete();
+            $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             // Null user_id = broadcast to every user within the tenant.
             $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('type');
@@ -27,7 +27,7 @@ return new class extends Migration
 
         Schema::create('notification_images', function (Blueprint $table): void {
             $table->id();
-            $table->foreignUuid('notification_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('notification_id')->constrained()->cascadeOnDelete();
             $table->string('url');
             $table->unsignedInteger('position')->default(0);
         });
@@ -35,7 +35,7 @@ return new class extends Migration
         Schema::create('notification_reads', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignUuid('notification_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('notification_id')->constrained()->cascadeOnDelete();
             $table->timestamp('read_at');
 
             $table->unique(['user_id', 'notification_id']);
@@ -43,7 +43,7 @@ return new class extends Migration
 
         Schema::create('notification_devices', function (Blueprint $table): void {
             $table->id();
-            $table->foreignUuid('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('token')->unique();
             $table->string('platform');

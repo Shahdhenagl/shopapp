@@ -13,7 +13,7 @@ return new class extends Migration
         // The SaaS account / store. Every domain table carries tenant_id and is
         // isolated at the data layer via the BelongsToTenant global scope.
         Schema::create('tenants', function (Blueprint $table): void {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->string('slug')->unique();
             $table->string('name');
             $table->string('status')->default('active');
@@ -23,7 +23,7 @@ return new class extends Migration
         // White-label surface read by GET /settings/app. One row per tenant.
         Schema::create('tenant_settings', function (Blueprint $table): void {
             $table->id();
-            $table->foreignUuid('tenant_id')->unique()->constrained()->cascadeOnDelete();
+            $table->foreignId('tenant_id')->unique()->constrained()->cascadeOnDelete();
             $table->string('app_name')->nullable();
             $table->string('currency')->default('EGP');
             $table->string('brand_primary')->nullable();

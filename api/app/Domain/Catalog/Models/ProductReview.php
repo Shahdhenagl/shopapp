@@ -6,14 +6,12 @@ namespace App\Domain\Catalog\Models;
 
 use App\Domain\Auth\Models\User;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductReview extends Model
 {
     use BelongsToTenant;
-    use HasUuids;
 
     /** Moderation state — only `approved` reviews reach the storefront. */
     public const string STATUS_PENDING = 'pending';

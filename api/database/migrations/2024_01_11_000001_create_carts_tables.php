@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('carts', function (Blueprint $table): void {
             $table->id();
-            $table->foreignUuid('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             // The promo applied to the cart, persisted so checkout can recompute
             // the discounted total server-side (the client sends no promo).

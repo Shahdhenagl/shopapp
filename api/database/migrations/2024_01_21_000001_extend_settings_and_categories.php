@@ -20,7 +20,7 @@ return new class extends Migration
         // Categories become a tree: a nullable self-referencing parent + a browse
         // tile image + soft deletes (so hiding never orphans historical orders).
         Schema::table('categories', function (Blueprint $table): void {
-            $table->uuid('parent_id')->nullable()->after('slug');
+            $table->unsignedBigInteger('parent_id')->nullable()->after('slug');
             $table->string('image_url')->nullable()->after('icon_key');
             $table->softDeletes();
 

@@ -14,7 +14,7 @@ return new class extends Migration
             // Simple auto-incrementing id (1, 2, 3…) — the app treats every id as
             // an opaque string, so "1" is a valid product id on the wire.
             $table->id();
-            $table->foreignUuid('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             // Stores the category slug (the per-tenant identifier). No DB FK to
             // categories because that key is now a surrogate UUID; integrity is
             // enforced at the application layer within the tenant.

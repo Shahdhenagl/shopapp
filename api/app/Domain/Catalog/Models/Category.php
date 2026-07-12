@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Domain\Catalog\Models;
 
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,7 +15,6 @@ class Category extends Model
 {
     use BelongsToTenant;
     use HasTranslations;
-    use HasUuids;
     use SoftDeletes;
 
     /**

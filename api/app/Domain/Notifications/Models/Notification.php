@@ -6,7 +6,6 @@ namespace App\Domain\Notifications\Models;
 
 use App\Domain\Auth\Models\User;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,7 +15,6 @@ class Notification extends Model
 {
     use BelongsToTenant;
     use HasTranslations;
-    use HasUuids;
 
     /**
      * @var list<string>

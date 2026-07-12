@@ -14,7 +14,7 @@ return new class extends Migration
         // a super-admin (SaaS owner) who can act across all tenants.
         Schema::create('admin_users', function (Blueprint $table): void {
             $table->id();
-            $table->foreignUuid('tenant_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
@@ -30,7 +30,7 @@ return new class extends Migration
         // Immutable trail of every mutating admin action (who/what/before/after).
         Schema::create('audit_logs', function (Blueprint $table): void {
             $table->id();
-            $table->foreignUuid('tenant_id')->nullable();
+            $table->foreignId('tenant_id')->nullable();
             $table->foreignId('admin_user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('action');                 // e.g. category.created
             $table->string('entity_type')->nullable(); // e.g. Category

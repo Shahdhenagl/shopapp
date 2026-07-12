@@ -14,8 +14,8 @@ return new class extends Migration
             // Surrogate UUID key: the wire "id" the client sees is the per-tenant
             // `slug` (tshirt, pants, …), exposed by CategoryResource. A surrogate
             // PK lets two tenants both own a "tshirt" category.
-            $table->uuid('id')->primary();
-            $table->foreignUuid('tenant_id')->constrained()->cascadeOnDelete();
+            $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('slug');
             $table->string('label_key');
             $table->string('icon_key');

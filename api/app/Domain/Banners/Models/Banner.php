@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace App\Domain\Banners\Models;
 
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class Banner extends Model
 {
     use BelongsToTenant;
-    use HasUuids;
 
     /** Deep-link target types (BACKEND.md §6.9). */
     public const LINK_NONE = 'none';

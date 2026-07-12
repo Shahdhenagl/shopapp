@@ -11,8 +11,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('banners', function (Blueprint $table): void {
-            $table->uuid('id')->primary();
-            $table->foreignUuid('tenant_id')->constrained()->cascadeOnDelete();
+            $table->id();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('image_url');
             $table->string('title')->nullable();
             $table->string('subtitle')->nullable();

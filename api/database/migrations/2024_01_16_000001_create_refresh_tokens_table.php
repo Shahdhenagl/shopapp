@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('refresh_tokens', function (Blueprint $table): void {
             $table->id();
-            $table->foreignUuid('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('token_hash')->unique();
             $table->timestamp('expires_at');
