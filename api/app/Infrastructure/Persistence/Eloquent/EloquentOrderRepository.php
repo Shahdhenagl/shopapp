@@ -74,7 +74,7 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
                 'branch' => $address->branch,
             ]);
 
-            return $order->load('items');
+            return $order->load('items.product.images');
         });
     }
 
@@ -91,7 +91,7 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
 
     public function findById(string $id): ?Order
     {
-        return Order::query()->with('items')->find($id);
+        return Order::query()->with('items.product.images')->find($id);
     }
 
     /**
@@ -100,7 +100,7 @@ final class EloquentOrderRepository implements OrderRepositoryInterface
     public function forUser(User $user): Collection
     {
         return Order::query()
-            ->with('items')
+            ->with('items.product.images')
             ->where('user_id', $user->id)
             ->latest()
             ->get();

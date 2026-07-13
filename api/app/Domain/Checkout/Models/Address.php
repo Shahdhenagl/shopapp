@@ -38,6 +38,7 @@ class Address extends Model
     {
         return [
             'is_default' => 'boolean',
+            
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
         ];

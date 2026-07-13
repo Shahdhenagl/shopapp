@@ -15,7 +15,9 @@ class OrderItemResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'product_id' => (string) $this->product_id,
+            'product_id' => $this->product_id !== null ? (string) $this->product_id : null,
+            // Images come from the product; empty once the product is deleted.
+            'images' => $this->product?->images->pluck('url')->values() ?? [],
             'name' => $this->name_snapshot,
             'size' => $this->size,
             'color' => (int) $this->color_value,
