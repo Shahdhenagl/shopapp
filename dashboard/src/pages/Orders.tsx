@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { X } from 'lucide-react';
+import { CreditCard, Mail, MapPin, Package, User, X } from 'lucide-react';
 import { getErrorMessage, ordersService } from '@/api';
 import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/Badge';
@@ -16,6 +16,26 @@ import {
 } from '@/lib/status';
 import type { Order, OrderStatus } from '@/types';
 
+/** ARGB int → a CSS #RRGGBB colour (alpha dropped). */
+function cssColor(argb: number): string {
+  return '#' + (argb & 0xffffff).toString(16).padStart(6, '0');
+}
+
+function InfoRow({
+  icon,
+  children,
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-2.5 text-sm">
+      <span className="text-slate-400">{icon}</span>
+      <span className="min-w-0 truncate">{children}</span>
+    </div>
+  );
+}
+
 function OrderDrawer({
   order,
   onClose,
@@ -27,13 +47,21 @@ function OrderDrawer({
   onStatusChange: (status: OrderStatus) => void;
   updating: boolean;
 }) {
+  const itemCount = order.items.reduce((n, it) => n + it.quantity, 0);
+
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/50">
-      <div className="h-full w-full max-w-md overflow-y-auto bg-white shadow-xl dark:bg-slate-900">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
-          <div>
-            <h2 className="font-semibold">Order {order.id}</h2>
-            <p className="text-xs text-slate-400">{formatDate(order.created_at)}</p>
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/50" onClick={onClose}>
+      <div
+        className="flex h-full w-full max-w-lg flex-col bg-slate-50 shadow-xl dark:bg-slate-950"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center gap-3">
+            <h2 className="font-mono text-lg font-bold">{order.id}</h2>
+            <Badge tone={orderStatusTone(order.status)}>
+              {humanize(order.status)}
+            </Badge>
           </div>
           <button
             onClick={onClose}
@@ -43,49 +71,91 @@ function OrderDrawer({
           </button>
         </div>
 
-        <div className="space-y-5 p-5">
-          <div className="flex flex-wrap gap-2">
-            <Badge tone={orderStatusTone(order.status)}>
-              {humanize(order.status)}
-            </Badge>
+        <div className="flex-1 space-y-4 overflow-y-auto p-5">
+          {/* Meta strip */}
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+            <span>{formatDate(order.created_at)}</span>
+            <span>·</span>
             <Badge tone={paymentStatusTone(order.payment_status)}>
               {humanize(order.payment_status)}
             </Badge>
           </div>
 
-          <div>
-            <p className="mb-1 text-xs uppercase tracking-wide text-slate-400">
-              Customer
-            </p>
-            <p className="text-sm font-medium">{order.user_name ?? order.user_id}</p>
-            {order.shipping_address && (
-              <p className="text-sm text-slate-500">{order.shipping_address}</p>
+          {/* Customer */}
+          <div className="card space-y-2 p-4">
+            <InfoRow icon={<User size={15} />}>
+              <span className="font-medium">
+                {order.user_name ?? `User ${order.user_id}`}
+              </span>
+            </InfoRow>
+            {order.user_email && (
+              <InfoRow icon={<Mail size={15} />}>{order.user_email}</InfoRow>
             )}
+            {order.shipping_address && (
+              <InfoRow icon={<MapPin size={15} />}>
+                {order.shipping_address}
+              </InfoRow>
+            )}
+            <InfoRow icon={<CreditCard size={15} />}>
+              {humanize(order.payment_method ?? '—')}
+            </InfoRow>
           </div>
 
+          {/* Items */}
           <div>
-            <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">
-              Items
+            <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+              {order.items.length} product(s) · {itemCount} item(s)
             </p>
-            <div className="space-y-2">
+            <div className="card divide-y divide-slate-100 p-0 dark:divide-slate-800">
               {order.items.map((it) => (
-                <div
-                  key={it.id}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 p-3 text-sm dark:border-slate-800"
-                >
-                  <div>
-                    <p className="font-medium">{it.name_snapshot}</p>
+                <div key={it.id} className="flex items-center gap-3 p-3">
+                  {/* Thumbnail */}
+                  {it.image ? (
+                    <img
+                      src={it.image}
+                      alt=""
+                      className="h-14 w-14 flex-shrink-0 rounded-lg border border-slate-200 object-cover dark:border-slate-700"
+                    />
+                  ) : (
+                    <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-100 text-slate-300 dark:border-slate-700 dark:bg-slate-800">
+                      <Package size={20} />
+                    </div>
+                  )}
+
+                  {/* Details */}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {it.name_snapshot}
+                    </p>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-slate-400">
+                      {it.color_value > 0 && (
+                        <span
+                          className="inline-block h-3.5 w-3.5 rounded-full border border-slate-300 dark:border-slate-600"
+                          style={{ backgroundColor: cssColor(it.color_value) }}
+                          title={it.color ?? undefined}
+                        />
+                      )}
+                      {it.size && <span>Size {it.size}</span>}
+                      <span>×{it.quantity}</span>
+                    </div>
+                  </div>
+
+                  {/* Price */}
+                  <div className="flex-shrink-0 text-right text-sm">
+                    <p className="font-medium">
+                      {formatMoney(it.line_total, order.currency)}
+                    </p>
                     <p className="text-xs text-slate-400">
-                      Size {it.size} · Qty {it.quantity}
+                      {formatMoney(it.unit_price, order.currency)} ea
                     </p>
                   </div>
-                  <span>{formatMoney(it.line_total, order.currency)}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="space-y-1 rounded-lg bg-slate-50 p-4 text-sm dark:bg-slate-800/50">
+          {/* Totals */}
+          <div className="card space-y-1.5 p-4 text-sm">
             <div className="flex justify-between">
               <span className="text-slate-500">Subtotal</span>
               <span>{formatMoney(order.subtotal, order.currency)}</span>
@@ -96,27 +166,28 @@ function OrderDrawer({
               </span>
               <span>-{formatMoney(order.discount, order.currency)}</span>
             </div>
-            <div className="flex justify-between border-t border-slate-200 pt-2 font-semibold dark:border-slate-700">
+            <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-semibold dark:border-slate-700">
               <span>Total</span>
               <span>{formatMoney(order.total, order.currency)}</span>
             </div>
           </div>
+        </div>
 
-          <div>
-            <label className="label">Update status</label>
-            <select
-              className="input"
-              value={order.status}
-              disabled={updating}
-              onChange={(e) => onStatusChange(e.target.value as OrderStatus)}
-            >
-              {ORDER_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {humanize(s)}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* Sticky status footer */}
+        <div className="border-t border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+          <label className="label">Update status</label>
+          <select
+            className="input"
+            value={order.status}
+            disabled={updating}
+            onChange={(e) => onStatusChange(e.target.value as OrderStatus)}
+          >
+            {ORDER_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {humanize(s)}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
     </div>

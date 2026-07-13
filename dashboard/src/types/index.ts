@@ -205,6 +205,8 @@ export interface OrderItem {
   name_snapshot: string;
   size: string;
   color_value: number;
+  color: string | null; // #AARRGGBB swatch, null when the item has no colour
+  image: string | null; // primary product image
   quantity: number;
   unit_price: number;
   line_total: number;
@@ -214,8 +216,10 @@ export interface Order {
   id: string;
   user_id: string;
   user_name?: string;
+  user_email?: string;
   status: OrderStatus;
   payment_status: PaymentStatus;
+  payment_method?: string;
   subtotal: number;
   discount: number;
   total: number;

@@ -41,6 +41,13 @@ class AdminOrderResource extends JsonResource
                     'name_snapshot' => $item->name_snapshot,
                     'size' => $item->size,
                     'color_value' => (int) $item->color_value,
+                    // #AARRGGBB swatch for the dashboard; null when the item has
+                    // no colour (a variant-less product).
+                    'color' => $item->color_value > 0
+                        ? '#' . strtoupper(str_pad(dechex((int) $item->color_value), 8, '0', STR_PAD_LEFT))
+                        : null,
+                    // Primary product image (null if the product was deleted).
+                    'image' => $item->product?->images->first()?->url,
                     'quantity' => (int) $item->quantity,
                     'unit_price' => (float) $item->unit_price,
                     'line_total' => (float) $item->line_total,

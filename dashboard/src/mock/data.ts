@@ -113,6 +113,8 @@ function makeOrder(
         name_snapshot: p.name,
         size: 'M',
         color_value: 4279371338,
+        color: '#FF1B2A4A',
+        image: p.images?.[0] ?? null,
         quantity: qty,
         unit_price: p.price,
         line_total: subtotal,
