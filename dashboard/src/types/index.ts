@@ -50,9 +50,9 @@ export interface StoreSettingsFlags {
 }
 
 export interface StoreSettingsBrand {
-  primary: string; // hex #RRGGBB or #AARRGGBB
-  on_primary: string;
-  accent: string;
+  primary: string | null; // hex #RRGGBB or #AARRGGBB; null = keep the app default
+  on_primary: string | null;
+  accent: string | null;
 }
 
 /** GET /settings → { data: StoreSettings }. */
@@ -73,9 +73,9 @@ export interface StoreSettingsUpdate {
   storefront_mode?: StorefrontMode;
   logo_url?: string | null;
   shipping_fee?: number;
-  brand_primary?: string;
-  brand_on_primary?: string;
-  brand_accent?: string;
+  brand_primary?: string | null;
+  brand_on_primary?: string | null;
+  brand_accent?: string | null;
   flags?: Partial<StoreSettingsFlags>;
 }
 

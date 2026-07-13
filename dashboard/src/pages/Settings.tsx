@@ -336,7 +336,7 @@ function ColorField({
   onChange,
 }: {
   label: string;
-  value: string;
+  value: string | null;
   onChange: (v: string) => void;
 }) {
   return (
@@ -351,7 +351,8 @@ function ColorField({
         />
         <input
           className="input flex-1 font-mono text-xs"
-          value={value}
+          placeholder="e.g. #0E0E0E"
+          value={value ?? ''}
           onChange={(e) => onChange(e.target.value)}
         />
       </div>

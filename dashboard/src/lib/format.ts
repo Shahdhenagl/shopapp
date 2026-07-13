@@ -16,13 +16,14 @@ export function formatDate(iso: string): string {
 }
 
 // Convert an #AARRGGBB hex string into a CSS #RRGGBB(AA) for swatches.
-export function hexArgbToCss(hex: string): string {
+export function hexArgbToCss(hex: string | null | undefined): string {
+  // Brand colours are optional; fall back to a neutral so a null never crashes
+  // a <input type="color"> (which requires a valid #RRGGBB).
+  if (!hex) return '#000000';
   const h = hex.replace('#', '');
-  if (h.length === 8) {
-    const rgb = h.slice(2);
-    return `#${rgb}`;
-  }
-  return hex;
+  if (h.length === 8) return `#${h.slice(2)}`;
+  if (h.length === 6) return `#${h}`;
+  return '#000000';
 }
 
 // Convert an int color value (ARGB) to an #AARRGGBB hex string.
