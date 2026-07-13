@@ -6,6 +6,14 @@
 /storage/*.key
 /storage/pail
 /vendor
+
+# Generated caches & runtime files — never commit these. Committing them once
+# broke a production deploy (bootstrap/cache pollution → app-wide 500).
+/bootstrap/cache/*.php
+/storage/logs/*.log
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*.php
 .env
 .env.backup
 .env.production
