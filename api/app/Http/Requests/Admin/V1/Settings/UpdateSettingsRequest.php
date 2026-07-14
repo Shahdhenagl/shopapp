@@ -32,6 +32,12 @@ class UpdateSettingsRequest extends FormRequest
             'brand_accent' => array_merge(['sometimes'], $hex),
             'flags' => ['sometimes', 'array'],
             'flags.*' => ['boolean'],
+            // Dashboard-curated Home rails (§6). Stale/unknown ids are dropped
+            // in the action against GET /categories; here we only shape/clamp.
+            'home_rail_categories' => ['sometimes', 'array'],
+            'home_rail_categories.*' => ['string'],
+            'max_home_rails' => ['sometimes', 'integer', 'between:0,20'],
+            'home_rail_item_count' => ['sometimes', 'integer', 'between:1,20'],
         ];
     }
 

@@ -41,6 +41,9 @@ let mockSettings: StoreSettings = {
     promo_codes: true,
     favorites: true,
   },
+  home_rail_categories: [],
+  max_home_rails: 8,
+  home_rail_item_count: 5,
 };
 
 // Flat category rows; the tree (children/is_leaf/product_count) is derived.

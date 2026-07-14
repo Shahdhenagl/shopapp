@@ -25,6 +25,9 @@ class TenantSettings extends Model
         'brand_on_primary',
         'brand_accent',
         'flags',
+        'home_rail_categories',
+        'max_home_rails',
+        'home_rail_item_count',
     ];
 
     /**
@@ -35,6 +38,9 @@ class TenantSettings extends Model
         return [
             'flags' => 'array',
             'shipping_fee' => 'decimal:2',
+            'home_rail_categories' => 'array',
+            'max_home_rails' => 'integer',
+            'home_rail_item_count' => 'integer',
         ];
     }
 

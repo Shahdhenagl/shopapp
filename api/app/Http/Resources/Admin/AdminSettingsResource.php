@@ -39,6 +39,13 @@ class AdminSettingsResource extends JsonResource
                 'promo_codes' => (bool) ($flags['promo_codes'] ?? true),
                 'favorites' => (bool) ($flags['favorites'] ?? true),
             ],
+            // Dashboard-curated Home rails (§5): ordered category ids + caps.
+            'home_rail_categories' => array_values(array_filter(
+                (array) ($this->home_rail_categories ?? []),
+                static fn ($id): bool => is_string($id) && $id !== '',
+            )),
+            'max_home_rails' => (int) ($this->max_home_rails ?? 8),
+            'home_rail_item_count' => (int) ($this->home_rail_item_count ?? 5),
         ];
     }
 }

@@ -92,6 +92,63 @@ it('rejects an invalid brand colour', function (): void {
     ], adminHeaders())->assertStatus(422);
 });
 
+// --- Dashboard-curated Home rails -------------------------------------------
+
+it('exposes home-rail defaults on the admin settings resource', function (): void {
+    $this->getJson('/api/admin/v1/settings', adminHeaders())
+        ->assertStatus(200)
+        ->assertJsonStructure(['data' => ['home_rail_categories', 'max_home_rails', 'home_rail_item_count']])
+        ->assertJsonPath('data.max_home_rails', 8)
+        ->assertJsonPath('data.home_rail_item_count', 5);
+});
+
+it('persists ordered home-rail categories and drops unknown ids', function (): void {
+    Category::query()->create(['slug' => 'phones', 'name' => ['en' => 'Phones', 'ar' => 'هواتف'], 'sort_order' => 0]);
+    Category::query()->create(['slug' => 'laptops', 'name' => ['en' => 'Laptops', 'ar' => 'لابتوب'], 'sort_order' => 1]);
+
+    $this->patchJson('/api/admin/v1/settings', [
+        // 'ghost' is not a real category → dropped; 'phones' duplicated → de-duped.
+        'home_rail_categories' => ['laptops', 'ghost', 'phones', 'phones'],
+        'max_home_rails' => 6,
+        'home_rail_item_count' => 4,
+    ], adminHeaders())
+        ->assertStatus(200)
+        ->assertJsonPath('data.home_rail_categories', ['laptops', 'phones'])
+        ->assertJsonPath('data.max_home_rails', 6)
+        ->assertJsonPath('data.home_rail_item_count', 4);
+});
+
+it('clamps out-of-range home-rail caps (§6)', function (): void {
+    $this->patchJson('/api/admin/v1/settings', ['max_home_rails' => 999], adminHeaders())
+        ->assertStatus(422);
+    $this->patchJson('/api/admin/v1/settings', ['home_rail_item_count' => 0], adminHeaders())
+        ->assertStatus(422);
+});
+
+it('returns home-rail config on the public GET /settings/app', function (): void {
+    Category::query()->create(['slug' => 'phones', 'name' => ['en' => 'Phones', 'ar' => 'هواتف'], 'sort_order' => 0]);
+
+    $this->patchJson('/api/admin/v1/settings', [
+        'home_rail_categories' => ['phones'],
+        'max_home_rails' => 3,
+        'home_rail_item_count' => 7,
+    ], adminHeaders())->assertStatus(200);
+
+    $this->getJson('/api/v1/settings/app', ['Accept' => 'application/json'])
+        ->assertStatus(200)
+        ->assertJsonPath('data.home_rail_categories', ['phones'])
+        ->assertJsonPath('data.max_home_rails', 3)
+        ->assertJsonPath('data.home_rail_item_count', 7);
+});
+
+it('defaults home-rail fields on the public endpoint when unset', function (): void {
+    $this->getJson('/api/v1/settings/app', ['Accept' => 'application/json'])
+        ->assertStatus(200)
+        ->assertJsonPath('data.home_rail_categories', [])
+        ->assertJsonPath('data.max_home_rails', 8)
+        ->assertJsonPath('data.home_rail_item_count', 5);
+});
+
 it('scopes settings writes to the operator tenant', function (): void {
     $other = makeOtherTenant();
     $otherAdmin = makeAdmin(AdminUser::ROLE_TENANT_ADMIN, $other);

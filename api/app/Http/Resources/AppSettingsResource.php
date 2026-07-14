@@ -35,7 +35,39 @@ class AppSettingsResource extends JsonResource
             'shipping_fee' => (int) round((float) ($settings?->shipping_fee ?? 0)),
             'brand' => $this->brand($settings),
             'flags' => $this->flags($settings),
+            // Dashboard-curated Home rails: ordered category ids the client
+            // resolves against its already-loaded catalog. Absent/empty → no
+            // rails (safe default). Clamps mirror the client contract (§6).
+            'home_rail_categories' => $this->railCategories($settings),
+            'max_home_rails' => max(0, min(20, (int) ($settings?->max_home_rails ?? 8))),
+            'home_rail_item_count' => max(1, min(20, (int) ($settings?->home_rail_item_count ?? 5))),
         ];
+    }
+
+    /**
+     * Ordered, de-duplicated list of promoted category ids (slugs). Empties and
+     * non-strings are dropped; order is preserved (jsonb array, not a set).
+     *
+     * @return list<string>
+     */
+    private function railCategories(?TenantSettings $settings): array
+    {
+        /** @var array<int, mixed> $ids */
+        $ids = (array) ($settings?->home_rail_categories ?? []);
+
+        $seen = [];
+        $out = [];
+
+        foreach ($ids as $id) {
+            if (! is_string($id) || $id === '' || isset($seen[$id])) {
+                continue;
+            }
+
+            $seen[$id] = true;
+            $out[] = $id;
+        }
+
+        return $out;
     }
 
     /**

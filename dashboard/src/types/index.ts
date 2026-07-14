@@ -64,6 +64,11 @@ export interface StoreSettings {
   shipping_fee: number;
   brand: StoreSettingsBrand;
   flags: StoreSettingsFlags;
+  // Dashboard-curated Home rails: ordered category ids (slugs) promoted on the
+  // app Home screen, plus caps. Empty list → no rails.
+  home_rail_categories: string[];
+  max_home_rails: number;
+  home_rail_item_count: number;
 }
 
 /** PATCH /settings accepts any subset. Brand colours are sent FLAT. */
@@ -77,6 +82,9 @@ export interface StoreSettingsUpdate {
   brand_on_primary?: string | null;
   brand_accent?: string | null;
   flags?: Partial<StoreSettingsFlags>;
+  home_rail_categories?: string[];
+  max_home_rails?: number;
+  home_rail_item_count?: number;
 }
 
 /** A node in the categories tree (GET /categories → { data: CategoryNode[] }). */

@@ -37,6 +37,18 @@ final readonly class UpdateSettingsAction
             }
         }
 
+        if (array_key_exists('home_rail_categories', $data)) {
+            $data['home_rail_categories'] = $this->sanitizeRailCategories($data['home_rail_categories']);
+        }
+
+        if (array_key_exists('max_home_rails', $data)) {
+            $data['max_home_rails'] = max(0, min(20, (int) $data['max_home_rails']));
+        }
+
+        if (array_key_exists('home_rail_item_count', $data)) {
+            $data['home_rail_item_count'] = max(1, min(20, (int) $data['home_rail_item_count']));
+        }
+
         $tenantId = $this->tenantContext->id();
 
         $existing = TenantSettings::query()->where('tenant_id', $tenantId)->first();
@@ -50,5 +62,38 @@ final readonly class UpdateSettingsAction
         $this->audit->log($actor, 'settings.updated', $settings, $before, $settings->toArray());
 
         return $settings;
+    }
+
+    /**
+     * Normalize the promoted-category list: keep only ids (slugs) that still
+     * exist in the tenant's catalog (GET /categories), drop empties and
+     * duplicates, and preserve the submitted order (display order on Home).
+     *
+     * @param  mixed  $value
+     * @return list<string>
+     */
+    private function sanitizeRailCategories(mixed $value): array
+    {
+        if (! is_array($value)) {
+            return [];
+        }
+
+        /** @var array<int, string> $known */
+        $known = Category::query()->pluck('slug')->all();
+        $known = array_flip($known);
+
+        $seen = [];
+        $out = [];
+
+        foreach ($value as $id) {
+            if (! is_string($id) || $id === '' || isset($seen[$id]) || ! isset($known[$id])) {
+                continue;
+            }
+
+            $seen[$id] = true;
+            $out[] = $id;
+        }
+
+        return $out;
     }
 }
