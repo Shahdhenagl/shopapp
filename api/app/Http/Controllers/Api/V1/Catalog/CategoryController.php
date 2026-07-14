@@ -8,16 +8,26 @@ use App\Domain\Catalog\Actions\ListCategoriesAction;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CategoryResource;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Domain\Catalog\Models\Category;
 
 class CategoryController extends Controller
 {
     public function __construct(
         private readonly ListCategoriesAction $listCategoriesAction,
-    ) {
-    }
+    ) {}
 
-    public function index(): AnonymousResourceCollection
+    // public function index(): AnonymousResourceCollection
+    // {
+    //     return CategoryResource::collection($this->listCategoriesAction->execute());
+    // }
+
+
+
+
+    public function index()
     {
-        return CategoryResource::collection($this->listCategoriesAction->execute());
+        $categories = Category::all();
+
+        return CategoryResource::collection($categories);
     }
 }
