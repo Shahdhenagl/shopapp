@@ -7,8 +7,10 @@ namespace App\Http\Controllers\Api\V1\Profile;
 use App\Domain\Auth\Models\User;
 use App\Domain\Profile\Actions\ListOrdersAction;
 use App\Domain\Profile\Actions\ShowProfileAction;
+use App\Domain\Profile\Actions\UpdateAvatarAction;
 use App\Domain\Profile\Actions\UpdateProfileAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Profile\UpdateAvatarRequest;
 use App\Http\Requests\Api\V1\Profile\UpdateProfileRequest;
 use App\Http\Resources\OrderResource;
 use App\Http\Resources\UserResource;
@@ -20,6 +22,7 @@ class ProfileController extends Controller
     public function __construct(
         private readonly ShowProfileAction $showProfileAction,
         private readonly UpdateProfileAction $updateProfileAction,
+        private readonly UpdateAvatarAction $updateAvatarAction,
         private readonly ListOrdersAction $listOrdersAction,
     ) {
     }
@@ -33,6 +36,16 @@ class ProfileController extends Controller
     {
         return UserResource::make(
             $this->updateProfileAction->execute($this->user($request), $request->validated()),
+        );
+    }
+
+    public function updateAvatar(UpdateAvatarRequest $request): UserResource
+    {
+        return UserResource::make(
+            $this->updateAvatarAction->execute(
+                $this->user($request),
+                $request->file('image'),
+            ),
         );
     }
 

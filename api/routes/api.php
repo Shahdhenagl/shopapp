@@ -113,6 +113,7 @@ Route::prefix('v1')->group(function (): void {
         // Profile
         Route::get('me', [ProfileController::class, 'show']);
         Route::patch('me', [ProfileController::class, 'update']);
+        Route::post('me/avatar', [ProfileController::class, 'updateAvatar']);
         Route::get('me/orders', [ProfileController::class, 'orders']);
     });
 });
