@@ -20,7 +20,8 @@ class CategoryResource extends JsonResource
             'id' => $this->slug,
             // Parent department's slug (null = top-level department). The app
             // builds the browse tree from these references.
-            'parent_id' => $this->whenLoaded('parent', fn() => $this->parent?->slug, $this->parentSlugFallback()),
+            // 'parent_id' => $this->whenLoaded('parent', fn() => $this->parent?->slug, $this->parentSlugFallback()),
+            'sub_categories' => SubCategoryResource::collection($this->whenLoaded('subCategories')),
             'label_key' => $this->label_key,
             'icon_key' => $this->icon_key,
             'name' => $this->name,
