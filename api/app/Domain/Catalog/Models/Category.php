@@ -68,20 +68,20 @@ class Category extends Model
      *
      * @return BelongsTo<Category, $this>
      */
-    // public function parent(): BelongsTo
-    // {
-    //     return $this->belongsTo(self::class, 'parent_id');
-    // }
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
 
-    // /**
-    //  * Direct sub-categories, ordered for display.
-    //  *
-    //  * @return HasMany<Category, $this>
-    //  */
-    // public function children(): HasMany
-    // {
-    //     return $this->hasMany(self::class, 'parent_id')->orderBy('sort_order');
-    // }
+    /**
+     * Direct sub-categories, ordered for display.
+     *
+     * @return HasMany<Category, $this>
+     */
+    public function children(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id')->orderBy('sort_order');
+    }
 
     /**
      * A leaf has no children — only leaves may own products.
