@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\Notifications\DeviceController;
 use App\Http\Controllers\Api\V1\Notifications\NotificationController;
 use App\Http\Controllers\Api\V1\Profile\ProfileController;
 use App\Http\Controllers\Api\V1\Settings\AppSettingsController;
+use App\Http\Controllers\Api\V1\Catalog\SubCategoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -63,6 +64,7 @@ Route::prefix('v1')->group(function (): void {
     */
     Route::get('settings/app', [AppSettingsController::class, 'show']);
     Route::get('categories', [CategoryController::class, 'index']);
+    Route::get('sub-categories', [SubCategoryController::class, 'index']);
     Route::get('products', [ProductController::class, 'index']);
     Route::get('products/{id}', [ProductController::class, 'show']);
     Route::get('products/{id}/reviews', [ReviewController::class, 'index']);

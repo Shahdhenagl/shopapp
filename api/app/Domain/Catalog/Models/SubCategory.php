@@ -20,6 +20,7 @@ class SubCategory extends Model
         'product_id',
         'slug',
         'name',
+        'image',
     ];
 
     public array $translatable = ['name'];
@@ -31,5 +32,10 @@ class SubCategory extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
     }
 }
