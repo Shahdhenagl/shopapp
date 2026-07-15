@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CreditCard, Mail, MapPin, Package, User, X } from 'lucide-react';
+import { CreditCard, Mail, MapPin, Package, Search, User, X } from 'lucide-react';
 import { getErrorMessage, ordersService } from '@/api';
 import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/Badge';
@@ -198,12 +198,25 @@ export function Orders() {
   const t = useLocaleStore((s) => s.t);
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<OrderStatus | ''>('');
+  const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Order | null>(null);
 
   const query = useQuery({
     queryKey: ['orders', statusFilter],
     queryFn: () => ordersService.list(statusFilter || undefined),
   });
+
+  // Client-side search over order id, customer name/email and phone.
+  const rows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const all = query.data ?? [];
+    if (!q) return all;
+    return all.filter((o) =>
+      [o.id, o.user_name, o.user_email, o.user_id]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q)),
+    );
+  }, [query.data, search]);
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
@@ -246,28 +259,39 @@ export function Orders() {
 
   return (
     <div>
-      <PageHeader
-        title={t('nav_orders')}
-        actions={
-          <select
-            className="input max-w-[200px]"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as OrderStatus | '')}
-          >
-            <option value="">All statuses</option>
-            {ORDER_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {humanize(s)}
-              </option>
-            ))}
-          </select>
-        }
-      />
+      <PageHeader title={t('nav_orders')} />
+
+      <div className="card mb-4 flex flex-wrap items-center gap-3 p-4">
+        <div className="relative min-w-[200px] flex-1">
+          <Search
+            size={16}
+            className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-slate-400"
+          />
+          <input
+            className="input ps-9"
+            placeholder={t('search')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <select
+          className="input max-w-[220px]"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as OrderStatus | '')}
+        >
+          <option value="">All statuses</option>
+          {ORDER_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {humanize(s)}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div className="card p-2">
         <DataTable
           columns={columns}
-          rows={query.data ?? []}
+          rows={rows}
           rowKey={(o) => o.id}
           loading={query.isLoading}
           error={query.error ? getErrorMessage(query.error) : null}

@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Pencil,
   Plus,
+  Search,
   Trash2,
   Upload,
 } from 'lucide-react';
@@ -28,6 +29,26 @@ import type { CategoryNode, CategoryNodeInput, Locale } from '@/types';
 
 function nodeName(node: CategoryNode, locale: Locale): string {
   return node.name[locale] || node.name.en || node.slug;
+}
+
+// Prune the tree to branches that match `term` (by EN/AR name or slug). A parent
+// is kept if it matches OR any descendant does, so hierarchy/context is retained.
+function filterTree(nodes: CategoryNode[], term: string): CategoryNode[] {
+  const q = term.trim().toLowerCase();
+  if (!q) return nodes;
+
+  const out: CategoryNode[] = [];
+  for (const node of nodes) {
+    const children = filterTree(node.children, q);
+    const selfMatch =
+      node.name.en.toLowerCase().includes(q) ||
+      node.name.ar.toLowerCase().includes(q) ||
+      node.slug.toLowerCase().includes(q);
+    if (selfMatch || children.length) {
+      out.push({ ...node, children });
+    }
+  }
+  return out;
 }
 
 interface FormValues {
@@ -312,12 +333,14 @@ export function Categories() {
   const [createParent, setCreateParent] = useState<CategoryNode | null>(null);
   const [editing, setEditing] = useState<CategoryNode | null>(null);
   const [deleting, setDeleting] = useState<CategoryNode | null>(null);
+  const [search, setSearch] = useState('');
 
   const query = useQuery({
     queryKey: ['admin-categories'],
     queryFn: () => adminCategoriesService.tree(),
   });
   const tree = query.data ?? [];
+  const filtered = useMemo(() => filterTree(tree, search), [tree, search]);
 
   const invalidate = () =>
     qc.invalidateQueries({ queryKey: ['admin-categories'] });
@@ -372,6 +395,23 @@ export function Categories() {
         }
       />
 
+      {tree.length > 0 && (
+        <div className="card mb-4 p-4">
+          <div className="relative min-w-[200px]">
+            <Search
+              size={16}
+              className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <input
+              className="input ps-9"
+              placeholder={t('search')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="card p-3">
         {query.isLoading ? (
           <LoadingState />
@@ -382,9 +422,11 @@ export function Categories() {
           />
         ) : tree.length === 0 ? (
           <EmptyState />
+        ) : filtered.length === 0 ? (
+          <EmptyState label={`No categories match "${search}"`} />
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
-            {tree.map((node) => (
+            {filtered.map((node) => (
               <TreeRow
                 key={node.id}
                 node={node}
