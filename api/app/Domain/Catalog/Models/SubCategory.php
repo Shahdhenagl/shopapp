@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Translatable\HasTranslations;
+use App\Traits\Uploadable;
 
 class SubCategory extends Model
 {
     /** @use HasFactory<\Database\Factories\SubCategoryFactory> */
-    use HasFactory, HasTranslations;
+    use HasFactory, HasTranslations, Uploadable;
 
     protected $fillable = [
         'category_id',
@@ -37,5 +38,24 @@ class SubCategory extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+
+    public function setImageAttribute($value): void
+    {
+        if ($value) {
+            $this->attributes['image'] = $this->uploadFile(
+                $value,
+                'sub-categories'
+            );
+        }
+    }
+
+    public function getImageAttribute($value): string
+    {
+        return $this->getImagePath(
+            $value,
+            'sub-categories'
+        );
     }
 }

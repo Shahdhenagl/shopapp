@@ -23,8 +23,7 @@ class SubCategoryResource extends JsonResource
                 return new ProductResource($this->product);
             }),
             'name' => $this->name,
-            'image' => $this->image,
-            'image_url' => $this->image ? Storage::disk('public')->url($this->image) : null,
+            'image' => $this->image_path,
         ];
     }
 }
