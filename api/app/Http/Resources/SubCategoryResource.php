@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class SubCategoryResource extends JsonResource
 {
@@ -21,8 +22,9 @@ class SubCategoryResource extends JsonResource
             'product' => $this->whenLoaded('product', function () {
                 return new ProductResource($this->product);
             }),
-
             'name' => $this->name,
+            'image' => $this->image,
+            'image_url' => $this->image ? Storage::disk('public')->url($this->image) : null,
         ];
     }
 }
