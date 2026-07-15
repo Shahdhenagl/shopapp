@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('slug');
             $table->unique(['category_id', 'slug']);
             $table->json('name');
+
+
             $table->timestamps();
         });
     }

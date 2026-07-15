@@ -26,8 +26,9 @@ class CategoryController extends Controller
 
     public function index()
     {
+        $perPage = request()->query('per_page', 10);
         // $categories = Category::with('subCategories')->get();
-        $categories = Category::with('subCategories')->get();
+        $categories = Category::with('subCategories')->paginate($perPage);;
 
 
         return CategoryResource::collection($categories);

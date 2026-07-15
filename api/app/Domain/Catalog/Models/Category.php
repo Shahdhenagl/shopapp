@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Translatable\HasTranslations;
-use App\Domain\Catalog\Models\subCategory;
+use App\Domain\Catalog\Models\SubCategory;
 
 class Category extends Model
 {
