@@ -18,9 +18,14 @@ class CategoryResource extends JsonResource
             // The client identifies categories by the per-tenant slug, not the
             // surrogate UUID primary key.
             'id' => $this->slug,
-            // Parent department's slug (null = top-level department). The app
-            // builds the browse tree from these references.
-            // 'parent_id' => $this->whenLoaded('parent', fn() => $this->parent?->slug, $this->parentSlugFallback()),
+            // Parent department's slug (null = top-level department). Clients
+            // build the browse tree from these references, so dropping this
+            // flattens every category into a department.
+            'parent_id' => $this->whenLoaded(
+                'parent',
+                fn () => $this->parent?->slug,
+                fn () => $this->parentSlugFallback(),
+            ),
             'sub_categories' => SubCategoryResource::collection($this->whenLoaded('subCategories')),
             'label_key' => $this->label_key,
             'icon_key' => $this->icon_key,

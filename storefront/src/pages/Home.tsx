@@ -5,16 +5,8 @@ import { ChevronLeft, ShoppingBag } from 'lucide-react';
 import { catalog, getErrorMessage } from '@/api';
 import { ProductCard } from '@/components/ProductCard';
 import { ErrorState, Skeleton } from '@/components/States';
+import { departments as topLevel, subtreeIds } from '@/lib/categories';
 import type { Category, Product } from '@/types';
-
-/** Flatten the tree so a rail can be scoped to a whole department. */
-function flatten(nodes: Category[]): Category[] {
-  return nodes.flatMap((n) => [n, ...flatten(n.children ?? [])]);
-}
-
-function subtreeIds(node: Category): string[] {
-  return [node.id, ...(node.children ?? []).flatMap(subtreeIds)];
-}
 
 function Rail({
   title,
@@ -67,12 +59,9 @@ export function Home() {
   });
 
   const settings = settingsQuery.data;
-  const categories = useMemo(
-    () => flatten(categoriesQuery.data ?? []),
-    [categoriesQuery.data],
-  );
+  const categories = categoriesQuery.data ?? [];
   const products = productsQuery.data ?? [];
-  const departments = categories.filter((c) => !c.parent_id);
+  const departments = useMemo(() => topLevel(categories), [categories]);
 
   // Dashboard-curated rails: ordered ids, unknown/duplicate ids ignored, empty
   // rails dropped, capped — the client owns all of this.
@@ -92,7 +81,8 @@ export function Home() {
       const category = categories.find((c) => c.id === id);
       if (!category) continue; // unknown id — doesn't consume a slot
 
-      const scope = new Set(subtreeIds(category));
+      // A department promotes its whole subtree, not just its own products.
+      const scope = new Set(subtreeIds(categories, category.id));
       const railProducts = products
         .filter((p) => scope.has(p.category_id))
         .slice(0, perRail);

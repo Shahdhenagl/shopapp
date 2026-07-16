@@ -13,7 +13,7 @@ final class EloquentCategoryRepository implements CategoryRepositoryInterface
     public function allOrdered(): Collection
     {
         return Category::query()
-            ->with('parent')
+            ->with(['parent', 'subCategories'])
             ->orderBy('sort_order', 'asc')
             ->get();
     }

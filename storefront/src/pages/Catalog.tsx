@@ -4,11 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { catalog, getErrorMessage } from '@/api';
 import { ProductCard } from '@/components/ProductCard';
 import { Empty, ErrorState, Skeleton } from '@/components/States';
-import type { Category } from '@/types';
-
-function flatten(nodes: Category[]): Category[] {
-  return nodes.flatMap((n) => [n, ...flatten(n.children ?? [])]);
-}
+import { childrenOf, departments as topLevel } from '@/lib/categories';
 
 export function Catalog() {
   const { categoryId } = useParams();
@@ -30,12 +26,18 @@ export function Catalog() {
       }),
   });
 
-  const categories = useMemo(
-    () => flatten(categoriesQuery.data ?? []),
-    [categoriesQuery.data],
-  );
+  const categories = categoriesQuery.data ?? [];
   const current = categories.find((c) => c.id === categoryId);
   const products = productsQuery.data ?? [];
+
+  // Browsing a department? Offer its sub-categories. Otherwise the departments.
+  const siblings = useMemo(() => {
+    if (!current) return topLevel(categories);
+    const children = childrenOf(categories, current.id);
+    return children.length > 0
+      ? children
+      : childrenOf(categories, current.parent_id ?? '');
+  }, [categories, current]);
 
   const title = search
     ? `نتائج البحث عن "${search}"`
@@ -45,26 +47,24 @@ export function Catalog() {
     <div>
       <h1 className="text-title font-bold text-ink">{title}</h1>
 
-      {/* Sibling / child categories */}
-      {categories.length > 0 && (
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+      {/* Departments, or the current department's sub-categories. */}
+      {siblings.length > 0 && (
+        <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link
             to="/shop"
             className={`pill flex-none ${!categoryId ? 'pill--active' : ''}`}
           >
             الكل
           </Link>
-          {categories
-            .filter((c) => !c.parent_id)
-            .map((c) => (
-              <Link
-                key={c.id}
-                to={`/c/${c.id}`}
-                className={`pill flex-none ${c.id === categoryId ? 'pill--active' : ''}`}
-              >
-                {c.name}
-              </Link>
-            ))}
+          {siblings.map((c) => (
+            <Link
+              key={c.id}
+              to={`/c/${c.id}`}
+              className={`pill flex-none ${c.id === categoryId ? 'pill--active' : ''}`}
+            >
+              {c.name}
+            </Link>
+          ))}
         </div>
       )}
 
