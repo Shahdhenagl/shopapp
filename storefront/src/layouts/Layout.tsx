@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Heart, Home, LayoutGrid, Search, ShoppingCart, User } from 'lucide-react';
 import { cartApi, catalog } from '@/api';
+import { LocaleToggle } from '@/components/LocaleToggle';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/store/auth';
 import { useLocale } from '@/store/locale';
@@ -79,6 +80,9 @@ export function Layout() {
           </form>
 
           <nav className="flex flex-none items-center gap-1">
+            {/* Language stays reachable on mobile too — it's not a preference
+                worth burying, especially on a bilingual storefront. */}
+            <LocaleToggle />
             <div className="hidden sm:block">
               <ThemeToggle />
             </div>
@@ -117,7 +121,10 @@ export function Layout() {
           <span>
             © {new Date().getFullYear()} {settings?.app_name ?? 'MODIST'}
           </span>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <LocaleToggle />
+            <ThemeToggle />
+          </div>
         </div>
       </footer>
 
