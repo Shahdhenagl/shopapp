@@ -2,11 +2,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 
-// The storefront is the shop itself, so it owns the domain root. Its hashed
-// assets live under /storefront/ (Laravel serves index.html for every
-// non-/api, non-/dashboard path — see routes/web.php).
+// Served at /store on the production host — a real directory beside
+// /dashboard, so Apache serves it directly and Laravel never sees these
+// paths. Its own .htaccess routes deep links back to index.html.
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/storefront/' : '/',
+  base: mode === 'production' ? '/store/' : '/',
   plugins: [react()],
   resolve: {
     alias: {
