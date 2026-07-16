@@ -32,6 +32,7 @@ export const catalog = {
     return data.data;
   },
 
+  // Param names are the API's: ?category=&q=&newest= (ProductController@index).
   async products(params: {
     category?: string;
     search?: string;
@@ -40,9 +41,9 @@ export const catalog = {
   } = {}): Promise<Product[]> {
     const { data } = await api.get<DataEnvelope<Product[]>>('/products', {
       params: {
-        category_id: params.category || undefined,
-        search: params.search || undefined,
-        is_newest: params.newest ? 1 : undefined,
+        category: params.category || undefined,
+        q: params.search || undefined,
+        newest: params.newest ? 'true' : undefined,
         per_page: params.per_page ?? 40,
       },
     });
@@ -127,6 +128,28 @@ export const cartApi = {
   async applyPromo(code: string): Promise<Cart> {
     const { data } = await api.post<DataEnvelope<Cart>>('/cart/promo', { code });
     return data.data;
+  },
+};
+
+// --- Favorites --------------------------------------------------------------
+// The API stores ids only; product detail comes from the catalog.
+
+export const favorites = {
+  async ids(): Promise<string[]> {
+    const { data } = await api.get<DataEnvelope<string[]>>('/favorites');
+    return data.data;
+  },
+
+  /** Toggle — returns the new id list. */
+  async toggle(productId: string): Promise<string[]> {
+    const { data } = await api.post<DataEnvelope<string[]>>('/favorites', {
+      product_id: productId,
+    });
+    return data.data;
+  },
+
+  async clear(): Promise<void> {
+    await api.delete('/favorites');
   },
 };
 

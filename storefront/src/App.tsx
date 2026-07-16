@@ -8,6 +8,7 @@ import { Home } from '@/pages/Home';
 import { Catalog } from '@/pages/Catalog';
 import { ProductDetail } from '@/pages/ProductDetail';
 import { CartPage } from '@/pages/CartPage';
+import { Favorites } from '@/pages/Favorites';
 import { Checkout } from '@/pages/Checkout';
 import { Login } from '@/pages/Login';
 import { Register } from '@/pages/Register';
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/c/:categoryId" element={<Catalog />} />
           <Route path="/p/:productId" element={<ProductDetail />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/favorites" element={<Favorites />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 

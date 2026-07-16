@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { ChevronLeft, ShoppingBag } from 'lucide-react';
 import { catalog, getErrorMessage } from '@/api';
 import { ProductCard } from '@/components/ProductCard';
 import { ErrorState, Skeleton } from '@/components/States';
 import type { Category, Product } from '@/types';
 
-/** Flatten the category tree so a rail can be scoped to a whole department. */
+/** Flatten the tree so a rail can be scoped to a whole department. */
 function flatten(nodes: Category[]): Category[] {
   return nodes.flatMap((n) => [n, ...flatten(n.children ?? [])]);
 }
@@ -28,14 +29,17 @@ function Rail({
   if (products.length === 0) return null;
 
   return (
-    <section className="mt-6">
-      <div className="mb-3 flex items-center justify-between">
+    <section className="mt-8">
+      <div className="mb-3 flex items-baseline justify-between">
         <h2 className="text-title font-bold text-ink">{title}</h2>
-        <Link to={to} className="text-body font-semibold text-accent">
-          عرض الكل
+        <Link
+          to={to}
+          className="flex items-center gap-0.5 text-body font-semibold text-accent"
+        >
+          عرض الكل <ChevronLeft size={15} />
         </Link>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-5">
         {products.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}
@@ -68,9 +72,10 @@ export function Home() {
     [categoriesQuery.data],
   );
   const products = productsQuery.data ?? [];
+  const departments = categories.filter((c) => !c.parent_id);
 
   // Dashboard-curated rails: ordered ids, unknown/duplicate ids ignored, empty
-  // rails dropped, capped — the client owns all of this (BACKEND.md §7).
+  // rails dropped, capped — the client owns all of this.
   const rails = useMemo(() => {
     const maxRails = Math.max(0, Math.min(20, settings?.max_home_rails ?? 8));
     const perRail = Math.max(1, Math.min(20, settings?.home_rail_item_count ?? 5));
@@ -101,11 +106,11 @@ export function Home() {
   const newest = products.filter((p) => p.is_newest).slice(0, 10);
   const banners = bannersQuery.data ?? [];
 
-  const bannerHref = (link_type: string, link_value: string | null) => {
-    if (!link_value) return '/shop';
-    if (link_type === 'category') return `/c/${link_value}`;
-    if (link_type === 'product') return `/p/${link_value}`;
-    if (link_type === 'url') return link_value;
+  const bannerHref = (linkType: string, linkValue: string | null) => {
+    if (!linkValue) return '/shop';
+    if (linkType === 'category') return `/c/${linkValue}`;
+    if (linkType === 'product') return `/p/${linkValue}`;
+    if (linkType === 'url') return linkValue;
     return '/shop';
   };
 
@@ -120,28 +125,32 @@ export function Home() {
 
   return (
     <div>
-      {/* Hero banners */}
+      {/* Hero — one banner per view, swipeable. */}
       {bannersQuery.isLoading ? (
-        <Skeleton className="aspect-[16/7] w-full" />
+        <Skeleton className="aspect-[2/1] w-full sm:aspect-[16/6]" />
       ) : banners.length > 0 ? (
-        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1">
+        <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {banners.map((b) => (
             <Link
               key={b.id}
               to={bannerHref(b.link_type, b.link_value)}
-              className="relative aspect-[16/7] w-full flex-none snap-start overflow-hidden rounded-card bg-surface-variant sm:w-[70%]"
+              className="relative aspect-[2/1] w-full flex-none snap-center overflow-hidden rounded-card bg-surface-variant sm:aspect-[16/6]"
             >
               <img
                 src={b.image_url}
                 alt={b.title ?? ''}
                 className="h-full w-full object-cover"
               />
-              {(b.title || b.cta_text) && (
-                <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/60 to-transparent p-4 text-white">
-                  {b.title && <p className="text-title font-bold">{b.title}</p>}
-                  {b.subtitle && <p className="text-body">{b.subtitle}</p>}
+              {(b.title || b.subtitle || b.cta_text) && (
+                <div className="absolute inset-0 flex flex-col items-start justify-end bg-gradient-to-t from-black/75 via-black/25 to-transparent p-5">
+                  {b.title && (
+                    <p className="text-title font-bold text-white">{b.title}</p>
+                  )}
+                  {b.subtitle && (
+                    <p className="mt-0.5 text-body text-white/85">{b.subtitle}</p>
+                  )}
                   {b.cta_text && (
-                    <span className="mt-2 w-fit rounded-pill bg-white/90 px-3 py-1 text-caption font-bold text-ink">
+                    <span className="mt-3 rounded-pill bg-white px-4 py-2 text-caption font-bold text-[#0e0e0e]">
                       {b.cta_text}
                     </span>
                   )}
@@ -152,24 +161,50 @@ export function Home() {
         </div>
       ) : null}
 
-      {/* Category pills on their sky panel */}
-      {categories.length > 0 && (
-        <section className="mt-5 rounded-card bg-section-fill p-3">
-          <div className="flex gap-2 overflow-x-auto">
-            {categories
-              .filter((c) => !c.parent_id)
-              .map((c) => (
-                <Link key={c.id} to={`/c/${c.id}`} className="pill flex-none">
+      {/* Departments — image tiles rather than a flat bar of words. */}
+      {departments.length > 0 && (
+        <section className="mt-7">
+          <div className="mb-3 flex items-baseline justify-between">
+            <h2 className="text-title font-bold text-ink">تسوّق حسب القسم</h2>
+            <Link
+              to="/shop"
+              className="flex items-center gap-0.5 text-body font-semibold text-accent"
+            >
+              عرض الكل <ChevronLeft size={15} />
+            </Link>
+          </div>
+
+          <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {departments.map((c) => (
+              <Link
+                key={c.id}
+                to={`/c/${c.id}`}
+                className="group flex w-16 flex-none flex-col items-center gap-2"
+              >
+                <span className="grid h-16 w-16 place-items-center overflow-hidden rounded-pill bg-section-fill ring-1 ring-hairline transition group-hover:ring-primary">
+                  {c.image_url ? (
+                    <img
+                      src={c.image_url}
+                      alt=""
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <ShoppingBag size={20} className="text-accent" />
+                  )}
+                </span>
+                <span className="w-full truncate text-center text-caption font-semibold text-ink">
                   {c.name}
-                </Link>
-              ))}
+                </span>
+              </Link>
+            ))}
           </div>
         </section>
       )}
 
       {/* Newest */}
       {productsQuery.isLoading ? (
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="aspect-[3/4]" />
           ))}

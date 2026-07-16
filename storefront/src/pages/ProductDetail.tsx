@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Minus, Plus, ShoppingBag, Star } from 'lucide-react';
+import { Check, Heart, Minus, Plus, ShoppingBag, Star } from 'lucide-react';
 import { cartApi, catalog, getErrorMessage } from '@/api';
 import { ErrorState, Loading } from '@/components/States';
+import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/store/auth';
 import { colorToInt, money, swatch } from '@/lib/format';
 
@@ -12,6 +13,8 @@ export function ProductDetail() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const authed = useAuth((s) => Boolean(s.token));
+  const { isFavorite, toggle: toggleFavorite, enabled: canFavorite } =
+    useFavorites();
 
   const [size, setSize] = useState<string | null>(null);
   const [color, setColor] = useState<string | null>(null);
@@ -108,8 +111,34 @@ export function ProductDetail() {
 
       {/* Detail */}
       <div>
-        <h1 className="text-title font-bold text-ink">{product.name}</h1>
-        {product.style && <p className="text-body text-muted">{product.style}</p>}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-title font-bold text-ink">{product.name}</h1>
+            {product.style && (
+              <p className="text-body text-muted">{product.style}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            aria-label={
+              isFavorite(product.id) ? 'إزالة من المفضلة' : 'إضافة للمفضلة'
+            }
+            aria-pressed={isFavorite(product.id)}
+            onClick={() =>
+              canFavorite
+                ? toggleFavorite(product.id)
+                : navigate('/login', { state: { from: `/p/${productId}` } })
+            }
+            className="grid h-10 w-10 flex-none place-items-center rounded-pill border border-hairline transition hover:bg-surface-variant"
+          >
+            <Heart
+              size={17}
+              className={
+                isFavorite(product.id) ? 'fill-pink text-pink' : 'text-muted'
+              }
+            />
+          </button>
+        </div>
 
         <div className="mt-2 flex items-center gap-2">
           <span className="price text-title">
