@@ -225,8 +225,19 @@ export interface OrderItem {
 /** Where the sale came from: the app checkout or the in-store POS. */
 export type OrderChannel = 'app' | 'pos';
 
-/** POS payment methods (`deferred` records the sale unpaid). */
-export type PosPaymentMethod = 'cash' | 'creditCard' | 'deferred';
+/** POS payment methods (`deferred` records that portion as unpaid). */
+export type PosPaymentMethod =
+  | 'cash'
+  | 'instapay'
+  | 'wallet'
+  | 'creditCard'
+  | 'deferred';
+
+/** One tender against a sale — several rows = a split payment. */
+export interface OrderPayment {
+  method: PosPaymentMethod;
+  amount: number;
+}
 
 /** Body for POST /admin/v1/orders — an in-store sale. */
 export interface PosSaleInput {
@@ -236,7 +247,8 @@ export interface PosSaleInput {
     color_value: number;
     quantity: number;
   }[];
-  payment_method: PosPaymentMethod;
+  /** Must add up to the sale total (validated server-side). */
+  payments: OrderPayment[];
   user_id?: number | null;
   customer_name?: string | null;
   customer_phone?: string | null;
@@ -253,7 +265,9 @@ export interface Order {
   customer_phone?: string | null;
   status: OrderStatus;
   payment_status: PaymentStatus;
+  /** 'split' when collected across methods — see `payments`. */
   payment_method?: string;
+  payments?: OrderPayment[];
   subtotal: number;
   discount: number;
   total: number;

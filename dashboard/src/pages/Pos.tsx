@@ -8,12 +8,15 @@ import {
   Plus,
   Search,
   ShoppingBag,
+  Smartphone,
   Trash2,
+  Wallet,
 } from 'lucide-react';
 import {
   adminProductsService,
   getErrorMessage,
   ordersService,
+  promosService,
   usersService,
 } from '@/api';
 import { PageHeader } from '@/components/PageHeader';
@@ -25,9 +28,13 @@ import { formatMoney, hexArgbToCss, hexArgbToInt } from '@/lib/format';
 import type {
   AdminProduct,
   Order,
+  OrderPayment,
   PosPaymentMethod,
   PosSaleInput,
 } from '@/types';
+
+// Money is compared in piastres so 0.1 + 0.2 never blocks a sale.
+const cents = (v: number) => Math.round(v * 100);
 
 // A product with no size/colour variants still needs a value on the line.
 const NO_SIZE = 'One Size';
@@ -49,9 +56,12 @@ const PAYMENT_METHODS: {
   icon: typeof Banknote;
 }[] = [
   { value: 'cash', label: 'Cash', icon: Banknote },
-  { value: 'creditCard', label: 'Card', icon: CreditCard },
+  { value: 'instapay', label: 'InstaPay', icon: Smartphone },
+  { value: 'wallet', label: 'Wallet', icon: Wallet },
+  { value: 'creditCard', label: 'Visa / Card', icon: CreditCard },
   { value: 'deferred', label: 'Pay later', icon: Clock },
 ];
+
 
 export function Pos() {
   const { t, locale } = useLocaleStore();
@@ -59,7 +69,8 @@ export function Pos() {
 
   const [search, setSearch] = useState('');
   const [lines, setLines] = useState<CartLine[]>([]);
-  const [payment, setPayment] = useState<PosPaymentMethod>('cash');
+  // Tenders the cashier has entered. Empty = collect it all as cash.
+  const [tenders, setTenders] = useState<OrderPayment[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [userId, setUserId] = useState<string>('');
@@ -74,6 +85,13 @@ export function Pos() {
   const customersQuery = useQuery({
     queryKey: ['users'],
     queryFn: () => usersService.list(),
+  });
+
+  // Only to mirror the server's discount in the split maths — the server still
+  // recomputes every total and rejects tenders that don't add up.
+  const promosQuery = useQuery({
+    queryKey: ['promos'],
+    queryFn: () => promosService.list(),
   });
 
   const addProduct = (product: AdminProduct) => {
@@ -128,13 +146,47 @@ export function Pos() {
   const itemCount = lines.reduce((n, l) => n + l.quantity, 0);
   const currency = lines[0]?.product.currency ?? 'EGP';
 
+  const appliedPromo = useMemo(() => {
+    const code = promo.trim().toUpperCase();
+    if (!code) return null;
+    return (
+      (promosQuery.data ?? []).find(
+        (p) => p.code.toUpperCase() === code && p.active,
+      ) ?? null
+    );
+  }, [promo, promosQuery.data]);
+
+  const discount = appliedPromo ? subtotal * appliedPromo.fraction : 0;
+  const total = Math.max(0, subtotal - discount);
+
+  // With no tenders entered, the sale is simply all cash.
+  const collected = tenders.reduce((s, t) => s + (t.amount || 0), 0);
+  const remaining = tenders.length === 0 ? 0 : total - collected;
+  const balanced = cents(remaining) === 0;
+
+  const addTender = (method: PosPaymentMethod) =>
+    setTenders((prev) => {
+      // First tender defaults to the whole balance; later ones to what's left.
+      const outstanding =
+        total - prev.reduce((s, t) => s + (t.amount || 0), 0);
+      return [...prev, { method, amount: Math.max(0, Number(outstanding.toFixed(2))) }];
+    });
+
+  const setTender = (index: number, patch: Partial<OrderPayment>) =>
+    setTenders((prev) =>
+      prev.map((t, i) => (i === index ? { ...t, ...patch } : t)),
+    );
+
+  const removeTender = (index: number) =>
+    setTenders((prev) => prev.filter((_, i) => i !== index));
+
   const reset = () => {
     setLines([]);
+    setTenders([]);
     setPromo('');
     setCustomerName('');
     setCustomerPhone('');
     setUserId('');
-    setPayment('cash');
   };
 
   const saleMutation = useMutation({
@@ -151,7 +203,7 @@ export function Pos() {
   });
 
   const completeSale = () => {
-    if (lines.length === 0) return;
+    if (lines.length === 0 || !balanced) return;
     saleMutation.mutate({
       items: lines.map((l) => ({
         product_id: l.product.id,
@@ -159,7 +211,11 @@ export function Pos() {
         color_value: l.color ? hexArgbToInt(l.color) : 0,
         quantity: l.quantity,
       })),
-      payment_method: payment,
+      // No explicit tenders = the whole sale in cash.
+      payments:
+        tenders.length > 0
+          ? tenders.map((t) => ({ ...t, amount: Number(t.amount.toFixed(2)) }))
+          : [{ method: 'cash', amount: Number(total.toFixed(2)) }],
       user_id: userId ? Number(userId) : null,
       customer_name: customerName.trim() || null,
       customer_phone: customerPhone.trim() || null,
@@ -394,50 +450,133 @@ export function Pos() {
             />
           </div>
 
-          {/* Payment */}
+          {/* Totals */}
+          <div className="mt-4 space-y-1 border-t border-slate-100 pt-3 text-sm dark:border-slate-800">
+            <div className="flex items-center justify-between text-slate-500">
+              <span>
+                Subtotal ({itemCount} item{itemCount === 1 ? '' : 's'})
+              </span>
+              <span>{formatMoney(subtotal, currency)}</span>
+            </div>
+            {discount > 0 && (
+              <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
+                <span>Discount ({appliedPromo?.code})</span>
+                <span>− {formatMoney(discount, currency)}</span>
+              </div>
+            )}
+            {promo.trim() !== '' && !appliedPromo && (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                Unknown or inactive code — the server will ignore it.
+              </p>
+            )}
+            <div className="flex items-center justify-between pt-1 text-base font-bold">
+              <span>Total</span>
+              <span>{formatMoney(total, currency)}</span>
+            </div>
+          </div>
+
+          {/* Payment — one row per method, so a sale can be split */}
           <div className="mt-3">
-            <label className="label">Payment</label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="mb-2 flex items-center justify-between">
+              <label className="label mb-0">Payment</label>
+              {tenders.length > 0 && (
+                <button
+                  type="button"
+                  className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  onClick={() => setTenders([])}
+                >
+                  Reset to all cash
+                </button>
+              )}
+            </div>
+
+            {tenders.length === 0 ? (
+              <p className="mb-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
+                Collecting the full amount in <strong>cash</strong>. Add a method
+                below to split it.
+              </p>
+            ) : (
+              <ul className="mb-2 space-y-2">
+                {tenders.map((t, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <select
+                      className="input h-9 flex-1 py-0 text-xs"
+                      value={t.method}
+                      onChange={(e) =>
+                        setTender(i, {
+                          method: e.target.value as PosPaymentMethod,
+                        })
+                      }
+                    >
+                      {PAYMENT_METHODS.map((m) => (
+                        <option key={m.value} value={m.value}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="input h-9 w-24 py-0 text-xs"
+                      value={t.amount}
+                      onChange={(e) =>
+                        setTender(i, { amount: Number(e.target.value) })
+                      }
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeTender(i)}
+                      className="rounded p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950"
+                      aria-label="Remove payment"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="flex flex-wrap gap-1.5">
               {PAYMENT_METHODS.map(({ value, label, icon: Icon }) => (
                 <button
                   key={value}
                   type="button"
-                  onClick={() => setPayment(value)}
-                  className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-2 text-xs font-medium transition ${
-                    payment === value
-                      ? 'border-brand-700 bg-brand-700 text-white'
-                      : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
-                  }`}
+                  onClick={() => addTender(value)}
+                  className="flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-medium text-slate-600 transition hover:border-brand-700 hover:text-brand-700 dark:border-slate-700 dark:text-slate-300"
                 >
-                  <Icon size={16} />
+                  <Icon size={13} />
                   {label}
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* Total + submit */}
-          <div className="mt-4 border-t border-slate-100 pt-3 dark:border-slate-800">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm text-slate-500">
-                Subtotal ({itemCount} item{itemCount === 1 ? '' : 's'})
-              </span>
-              <span className="text-lg font-bold">
-                {formatMoney(subtotal, currency)}
-              </span>
-            </div>
-            {promo.trim() !== '' && (
-              <p className="mb-2 text-xs text-slate-400">
-                Discount is applied by the server when the code is valid.
+            {tenders.length > 0 && !balanced && (
+              <p
+                className={`mt-2 rounded-lg px-3 py-2 text-xs font-medium ${
+                  remaining > 0
+                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400'
+                    : 'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-400'
+                }`}
+              >
+                {remaining > 0
+                  ? `${formatMoney(remaining, currency)} still to collect`
+                  : `Over by ${formatMoney(-remaining, currency)}`}
               </p>
             )}
+          </div>
+
+          {/* Submit */}
+          <div className="mt-4 border-t border-slate-100 pt-3 dark:border-slate-800">
             <Button
               className="w-full"
-              disabled={lines.length === 0}
+              disabled={lines.length === 0 || !balanced}
               loading={saleMutation.isPending}
               onClick={completeSale}
             >
-              {payment === 'deferred' ? 'Record unpaid sale' : 'Complete sale'}
+              {tenders.some((t) => t.method === 'deferred')
+                ? 'Record partly unpaid sale'
+                : 'Complete sale'}
             </Button>
           </div>
 

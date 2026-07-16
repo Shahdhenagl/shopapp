@@ -45,8 +45,27 @@ class Order extends Model
 
     public const string PAYMENT_METHOD_CARD = 'creditCard';
     public const string PAYMENT_METHOD_CASH = 'cash';
+    // Egyptian instant transfer + mobile wallets, collected at the counter.
+    public const string PAYMENT_METHOD_INSTAPAY = 'instapay';
+    public const string PAYMENT_METHOD_WALLET = 'wallet';
     // In-store "pay later" — the sale is recorded but stays unpaid.
     public const string PAYMENT_METHOD_DEFERRED = 'deferred';
+    // Summary value on the order when the sale was split across methods; the
+    // real breakdown lives in order_payments.
+    public const string PAYMENT_METHOD_SPLIT = 'split';
+
+    /**
+     * Methods a cashier may collect with. 'deferred' means "not collected".
+     *
+     * @var list<string>
+     */
+    public const array POS_PAYMENT_METHODS = [
+        self::PAYMENT_METHOD_CASH,
+        self::PAYMENT_METHOD_INSTAPAY,
+        self::PAYMENT_METHOD_WALLET,
+        self::PAYMENT_METHOD_CARD,
+        self::PAYMENT_METHOD_DEFERRED,
+    ];
 
     // Where the sale originated.
     public const string CHANNEL_APP = 'app';
@@ -125,6 +144,16 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    /**
+     * How the sale was collected — one row per method (split tenders).
+     *
+     * @return HasMany<OrderPayment, $this>
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(OrderPayment::class);
     }
 
     /**

@@ -38,6 +38,8 @@ export const ordersService = {
   /** Ring up an in-store sale. Totals + stock are resolved server-side. */
   async createPosSale(input: PosSaleInput): Promise<Order> {
     if (USE_MOCK) {
+      const total = input.payments.reduce((s, p) => s + p.amount, 0);
+      const unpaid = input.payments.some((p) => p.method === 'deferred');
       const order: Order = {
         id: `POS-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
         user_id: input.user_id ? String(input.user_id) : null,
@@ -45,12 +47,14 @@ export const ordersService = {
         channel: 'pos',
         customer_name: input.customer_name ?? null,
         customer_phone: input.customer_phone ?? null,
-        status: input.payment_method === 'deferred' ? 'pending' : 'paid',
-        payment_status: input.payment_method === 'deferred' ? 'pending' : 'paid',
-        payment_method: input.payment_method,
-        subtotal: 0,
+        status: unpaid ? 'pending' : 'paid',
+        payment_status: unpaid ? 'pending' : 'paid',
+        payment_method:
+          input.payments.length === 1 ? input.payments[0].method : 'split',
+        payments: input.payments,
+        subtotal: total,
         discount: 0,
-        total: 0,
+        total,
         currency: 'EGP',
         promo_code: input.promo_code ?? null,
         items: [],

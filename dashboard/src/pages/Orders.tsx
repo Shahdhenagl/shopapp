@@ -116,7 +116,14 @@ function OrderDrawer({
               </InfoRow>
             )}
             <InfoRow icon={<CreditCard size={15} />}>
-              {humanize(order.payment_method ?? '—')}
+              {order.payments && order.payments.length > 1
+                ? order.payments
+                    .map(
+                      (p) =>
+                        `${humanize(p.method)} ${formatMoney(p.amount, order.currency)}`,
+                    )
+                    .join(' + ')
+                : humanize(order.payment_method ?? '—')}
             </InfoRow>
           </div>
 

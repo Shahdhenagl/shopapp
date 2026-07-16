@@ -11,6 +11,7 @@ use App\Domain\Catalog\Exceptions\ProductNotFoundException;
 use App\Domain\Catalog\Models\Product;
 use App\Domain\Checkout\Exceptions\EmptyPosSaleException;
 use App\Domain\Checkout\Exceptions\InsufficientStockException;
+use App\Domain\Checkout\Exceptions\PaymentTotalMismatchException;
 use App\Domain\Checkout\Models\Order;
 use App\Domain\Shared\ValueObjects\Money;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +20,8 @@ use Illuminate\Support\Facades\DB;
  * Records an in-store (POS) sale: the cashier picks products directly, so there
  * is no cart and no app account required. Prices come from the catalog — client
  * totals are never trusted — stock is decremented in the same transaction, and
- * a cash/card sale is recorded as already paid ('deferred' stays unpaid).
+ * the money may be collected across several methods (cash / InstaPay / wallet /
+ * card), with any 'deferred' portion left outstanding.
  */
 final readonly class CreatePosOrderAction
 {
@@ -31,11 +33,12 @@ final readonly class CreatePosOrderAction
 
     /**
      * @param  list<array{product_id: int|string, size: string, color_value: int, quantity: int}>  $items
+     * @param  list<array{method: string, amount: int|float|string}>  $payments  One row per tender; must add up to the sale total.
      */
     public function execute(
         AdminUser $actor,
         array $items,
-        string $paymentMethod,
+        array $payments,
         ?int $userId = null,
         ?string $customerName = null,
         ?string $customerPhone = null,
@@ -48,7 +51,7 @@ final readonly class CreatePosOrderAction
         $currency = (string) config('app.currency', 'EGP');
 
         return DB::transaction(function () use (
-            $actor, $items, $paymentMethod, $userId, $customerName, $customerPhone, $promoCode, $currency
+            $actor, $items, $payments, $userId, $customerName, $customerPhone, $promoCode, $currency
         ): Order {
             $subtotal = Money::zero($currency);
             $lines = [];
@@ -99,8 +102,34 @@ final readonly class CreatePosOrderAction
             $discount = $subtotal->percentage($fraction);
             $amount = $subtotal->subtract($discount);
 
-            // Cash/card is money in hand at the counter; 'deferred' is pay-later.
-            $paid = $paymentMethod !== Order::PAYMENT_METHOD_DEFERRED;
+            // The tenders must account for the whole sale — no silent shortfall.
+            $collected = Money::zero($currency);
+            $deferred = Money::zero($currency);
+
+            foreach ($payments as $payment) {
+                $tender = Money::fromMajor((string) $payment['amount'], $currency);
+                $collected = $collected->add($tender);
+
+                if ($payment['method'] === Order::PAYMENT_METHOD_DEFERRED) {
+                    $deferred = $deferred->add($tender);
+                }
+            }
+
+            if ($collected->toCents() !== $amount->toCents()) {
+                throw new PaymentTotalMismatchException(
+                    $collected->toMajorFloat(),
+                    $amount->toMajorFloat(),
+                );
+            }
+
+            // Fully collected only when nothing was left on the tab.
+            $paid = $deferred->isZero();
+
+            // Keep a readable summary on the order; the breakdown lives in
+            // order_payments once a sale is split across methods.
+            $method = count($payments) === 1
+                ? (string) $payments[0]['method']
+                : Order::PAYMENT_METHOD_SPLIT;
 
             /** @var Order $order */
             $order = Order::query()->create([
@@ -114,15 +143,23 @@ final readonly class CreatePosOrderAction
                 'amount' => $amount->toMajorFloat(),
                 'currency' => $currency,
                 'promo_code' => $appliedCode,
-                'payment_method' => $paymentMethod,
+                'payment_method' => $method,
                 'payment_status' => $paid ? Order::PAYMENT_PAID : Order::PAYMENT_PENDING,
             ]);
 
             $order->items()->createMany($lines);
 
+            $order->payments()->createMany(array_map(
+                static fn (array $payment): array => [
+                    'method' => $payment['method'],
+                    'amount' => Money::fromMajor((string) $payment['amount'], $currency)->toMajorFloat(),
+                ],
+                $payments,
+            ));
+
             $this->audit->log($actor, 'order.pos_sale', $order, null, $order->toArray());
 
-            return $order->load('items.product.images');
+            return $order->load('items.product.images', 'payments');
         });
     }
 }

@@ -78,5 +78,6 @@ return [
     'unsupported_payment_method' => 'This payment method is not supported.',
     'insufficient_stock' => 'Not enough stock for ":product" — only :available left.',
     'pos_empty_sale' => 'Add at least one item to the sale.',
+    'payment_total_mismatch' => 'Payments add up to :collected but the sale total is :expected.',
 
 ];

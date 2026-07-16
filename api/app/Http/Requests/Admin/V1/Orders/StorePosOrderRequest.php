@@ -27,11 +27,11 @@ class StorePosOrderRequest extends FormRequest
             'items.*.color_value' => ['required', 'integer', 'min:0'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
 
-            'payment_method' => ['required', Rule::in([
-                Order::PAYMENT_METHOD_CASH,
-                Order::PAYMENT_METHOD_CARD,
-                Order::PAYMENT_METHOD_DEFERRED,
-            ])],
+            // One row per tender — a sale may be split across methods. The
+            // amounts must add up to the sale total (checked server-side).
+            'payments' => ['required', 'array', 'min:1'],
+            'payments.*.method' => ['required', Rule::in(Order::POS_PAYMENT_METHODS)],
+            'payments.*.amount' => ['required', 'numeric', 'gt:0'],
 
             // Optional link to a registered customer; otherwise it's a walk-in.
             'user_id' => ['sometimes', 'nullable', 'integer', 'exists:users,id'],

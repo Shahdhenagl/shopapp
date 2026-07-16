@@ -49,11 +49,13 @@ class OrderController extends Controller
     {
         /** @var list<array{product_id: int|string, size: string, color_value: int, quantity: int}> $items */
         $items = $request->validated('items');
+        /** @var list<array{method: string, amount: int|float|string}> $payments */
+        $payments = $request->validated('payments');
 
         $order = $this->createPosOrderAction->execute(
             $this->actor($request),
             $items,
-            $request->validated('payment_method'),
+            $payments,
             $request->validated('user_id'),
             $request->validated('customer_name'),
             $request->validated('customer_phone'),

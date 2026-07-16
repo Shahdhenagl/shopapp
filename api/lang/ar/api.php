@@ -78,5 +78,6 @@ return [
     'unsupported_payment_method' => 'طريقة الدفع هذه غير مدعومة.',
     'insufficient_stock' => 'الكمية غير كافية لـ ":product" — المتاح :available فقط.',
     'pos_empty_sale' => 'أضف صنفًا واحدًا على الأقل للبيعة.',
+    'payment_total_mismatch' => 'إجمالي المدفوعات :collected بينما إجمالي البيعة :expected.',
 
 ];

@@ -28,6 +28,8 @@ function posProduct(int $stock = 10, float $price = 100): Product
 }
 
 /**
+ * Payments default to a single cash tender covering the whole sale.
+ *
  * @param  array<string, mixed>  $overrides
  * @return array<string, mixed>
  */
@@ -40,7 +42,9 @@ function posPayload(Product $product, array $overrides = [], int $quantity = 2):
             'color_value' => 4279371338,
             'quantity' => $quantity,
         ]],
-        'payment_method' => 'cash',
+        'payments' => [
+            ['method' => 'cash', 'amount' => (float) $product->price * $quantity],
+        ],
     ], $overrides);
 }
 
@@ -85,10 +89,10 @@ it('blocks the sale when stock is insufficient and leaves stock untouched', func
 });
 
 it('records a deferred sale as unpaid but still deducts stock', function (): void {
-    $product = posProduct(stock: 4);
+    $product = posProduct(stock: 4, price: 100);
 
     $response = $this->postJson('/api/admin/v1/orders', posPayload($product, [
-        'payment_method' => 'deferred',
+        'payments' => [['method' => 'deferred', 'amount' => 200]],
     ]), adminHeaders());
 
     $response->assertStatus(201);
@@ -96,6 +100,76 @@ it('records a deferred sale as unpaid but still deducts stock', function (): voi
     $response->assertJsonPath('data.payment_status', 'pending');
 
     expect($product->fresh()->stock)->toBe(2);
+});
+
+// --- Split tenders ----------------------------------------------------------
+
+it('splits one sale across several payment methods', function (): void {
+    $product = posProduct(stock: 5, price: 100); // 2 × 100 = 200
+
+    $response = $this->postJson('/api/admin/v1/orders', posPayload($product, [
+        'payments' => [
+            ['method' => 'cash', 'amount' => 120],
+            ['method' => 'instapay', 'amount' => 50],
+            ['method' => 'wallet', 'amount' => 30],
+        ],
+    ]), adminHeaders());
+
+    $response->assertStatus(201);
+    $response->assertJsonPath('data.total', 200.0);
+    // Summarised as 'split'; the breakdown rides along.
+    $response->assertJsonPath('data.payment_method', 'split');
+    $response->assertJsonPath('data.payment_status', 'paid');
+    expect($response->json('data.payments'))->toBe([
+        ['method' => 'cash', 'amount' => 120.0],
+        ['method' => 'instapay', 'amount' => 50.0],
+        ['method' => 'wallet', 'amount' => 30.0],
+    ]);
+});
+
+it('keeps the single method on the order when the sale is not split', function (): void {
+    $product = posProduct(price: 100);
+
+    $this->postJson('/api/admin/v1/orders', posPayload($product, [
+        'payments' => [['method' => 'instapay', 'amount' => 200]],
+    ]), adminHeaders())
+        ->assertStatus(201)
+        ->assertJsonPath('data.payment_method', 'instapay');
+});
+
+it('leaves the sale unpaid when part of it is deferred', function (): void {
+    $product = posProduct(stock: 5, price: 100); // total 200
+
+    $response = $this->postJson('/api/admin/v1/orders', posPayload($product, [
+        'payments' => [
+            ['method' => 'cash', 'amount' => 150],
+            ['method' => 'deferred', 'amount' => 50], // 50 left on the tab
+        ],
+    ]), adminHeaders());
+
+    $response->assertStatus(201);
+    $response->assertJsonPath('data.payment_status', 'pending');
+    $response->assertJsonPath('data.status', 'pending');
+});
+
+it('rejects tenders that do not add up to the sale total', function (): void {
+    $product = posProduct(stock: 5, price: 100); // total 200
+
+    $this->postJson('/api/admin/v1/orders', posPayload($product, [
+        'payments' => [['method' => 'cash', 'amount' => 150]], // 50 short
+    ]), adminHeaders())->assertStatus(422);
+
+    // Nothing was recorded and stock is untouched.
+    expect(Order::query()->count())->toBe(0);
+    expect($product->fresh()->stock)->toBe(5);
+});
+
+it('rejects an overpayment', function (): void {
+    $product = posProduct(stock: 5, price: 100); // total 200
+
+    $this->postJson('/api/admin/v1/orders', posPayload($product, [
+        'payments' => [['method' => 'cash', 'amount' => 500]],
+    ]), adminHeaders())->assertStatus(422);
 });
 
 it('links the sale to a registered customer when one is picked', function (): void {
@@ -126,7 +200,7 @@ it('keeps the walk-in name/phone the cashier typed', function (): void {
 it('rejects an empty sale', function (): void {
     $this->postJson('/api/admin/v1/orders', [
         'items' => [],
-        'payment_method' => 'cash',
+        'payments' => [['method' => 'cash', 'amount' => 10]],
     ], adminHeaders())->assertStatus(422);
 });
 
@@ -134,7 +208,15 @@ it('rejects an unsupported payment method', function (): void {
     $product = posProduct();
 
     $this->postJson('/api/admin/v1/orders', posPayload($product, [
-        'payment_method' => 'bitcoin',
+        'payments' => [['method' => 'bitcoin', 'amount' => 200]],
+    ]), adminHeaders())->assertStatus(422);
+});
+
+it('rejects a sale with no tenders at all', function (): void {
+    $product = posProduct();
+
+    $this->postJson('/api/admin/v1/orders', posPayload($product, [
+        'payments' => [],
     ]), adminHeaders())->assertStatus(422);
 });
 

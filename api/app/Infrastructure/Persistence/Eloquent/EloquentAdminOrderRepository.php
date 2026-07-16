@@ -13,7 +13,7 @@ final class EloquentAdminOrderRepository implements AdminOrderRepositoryInterfac
     public function paginate(?string $status, int $perPage): LengthAwarePaginator
     {
         return Order::query()
-            ->with(['items.product.images', 'user', 'address'])
+            ->with(['items.product.images', 'user', 'address', 'payments'])
             ->when($status !== null && $status !== '', fn ($query) => $query->where('status', $status))
             ->orderByDesc('created_at')
             ->paginate($perPage);
@@ -22,7 +22,7 @@ final class EloquentAdminOrderRepository implements AdminOrderRepositoryInterfac
     public function find(string $id): ?Order
     {
         return Order::query()
-            ->with(['items.product.images', 'user', 'address'])
+            ->with(['items.product.images', 'user', 'address', 'payments'])
             ->find($id);
     }
 
@@ -36,6 +36,6 @@ final class EloquentAdminOrderRepository implements AdminOrderRepositoryInterfac
 
         $order->save();
 
-        return $order->load(['items.product.images', 'user', 'address']);
+        return $order->load(['items.product.images', 'user', 'address', 'payments']);
     }
 }

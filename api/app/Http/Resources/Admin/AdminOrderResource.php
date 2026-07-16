@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources\Admin;
 
 use App\Domain\Checkout\Models\OrderItem;
+use App\Domain\Checkout\Models\OrderPayment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -36,7 +37,15 @@ class AdminOrderResource extends JsonResource
             'customer_phone' => $this->customer_phone,
             'status' => $this->status,
             'payment_status' => $this->payment_status,
+            // 'split' when the sale was collected across several methods —
+            // `payments` carries the breakdown.
             'payment_method' => $this->payment_method,
+            'payments' => $this->whenLoaded('payments', fn () => $this->payments->map(
+                fn (OrderPayment $payment): array => [
+                    'method' => $payment->method,
+                    'amount' => (float) $payment->amount,
+                ],
+            )->values()),
             'subtotal' => (float) $this->subtotal,
             'discount' => (float) $this->discount,
             'total' => (float) $this->amount,
