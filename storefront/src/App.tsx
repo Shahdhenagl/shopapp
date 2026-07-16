@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { setUnauthorizedHandler } from '@/api';
@@ -31,8 +31,14 @@ export default function App() {
   }, [clear]);
 
   // The API resolves names/descriptions from Accept-Language, so cached copy is
-  // stale the moment the language changes.
+  // stale the moment the language changes. Skip the mount run: clearing while
+  // the first queries are still in flight detaches them and they never resolve.
+  const mounted = useRef(false);
   useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
     qc.clear();
   }, [locale, qc]);
 
