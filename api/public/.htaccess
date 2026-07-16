@@ -5,6 +5,10 @@
 
     RewriteEngine On
 
+    # The shop is the front door: send the bare domain to the storefront rather
+    # than to Laravel, which has no route for / and would 404.
+    RewriteRule ^$ /store/ [R=302,L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
