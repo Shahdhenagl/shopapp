@@ -6,6 +6,7 @@ import { cartApi, catalog } from '@/api';
 import { LocaleToggle } from '@/components/LocaleToggle';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/store/auth';
+import { departments as topLevel } from '@/lib/categories';
 import { useCatalogKey } from '@/hooks/useCatalogKey';
 import { useLocale } from '@/store/locale';
 
@@ -17,6 +18,34 @@ function useCartCount() {
     enabled: authed,
   });
   return data?.items.reduce((n, i) => n + i.quantity, 0) ?? 0;
+}
+
+function FooterColumn({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <h3 className="mb-3 text-body font-bold text-ink">{title}</h3>
+      <ul className="space-y-2">{children}</ul>
+    </div>
+  );
+}
+
+function FooterLink({ to, children }: { to: string; children: React.ReactNode }) {
+  return (
+    <li>
+      <Link
+        to={to}
+        className="text-body text-muted transition hover:text-accent"
+      >
+        {children}
+      </Link>
+    </li>
+  );
 }
 
 function CartBadge({ count }: { count: number }) {
@@ -38,6 +67,13 @@ export function Layout() {
     queryKey: useCatalogKey('settings'),
     queryFn: () => catalog.settings(),
   });
+
+  // Shares the cache with the pages, so the footer costs no extra request.
+  const { data: categories } = useQuery({
+    queryKey: useCatalogKey('categories'),
+    queryFn: () => catalog.categories(),
+  });
+  const departments = topLevel(categories ?? []);
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,14 +153,59 @@ export function Layout() {
         <Outlet />
       </main>
 
-      <footer className="hidden border-t border-hairline bg-surface py-6 sm:block">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 text-caption sm:px-6 lg:px-8 text-muted">
-          <span>
-            © {new Date().getFullYear()} {settings?.app_name ?? 'MODIST'}
-          </span>
-          <div className="flex items-center gap-2">
-            <LocaleToggle />
-            <ThemeToggle />
+      <footer className="hidden border-t border-hairline bg-surface sm:block">
+        <div className="mx-auto max-w-[1600px] px-4 py-10 sm:px-6 lg:px-8">
+          <div className="grid gap-8 md:grid-cols-4">
+            {/* Brand */}
+            <div className="md:col-span-2">
+              <Link to="/" className="flex w-fit items-center gap-2">
+                {settings?.logo_url ? (
+                  <img
+                    src={settings.logo_url}
+                    alt=""
+                    className="h-9 w-9 rounded-input object-cover"
+                  />
+                ) : (
+                  <span className="grid h-9 w-9 place-items-center rounded-input bg-primary font-bold text-on-primary">
+                    {settings?.app_name?.[0] ?? 'M'}
+                  </span>
+                )}
+                <span className="text-title font-bold text-ink">
+                  {settings?.app_name ?? 'MODIST'}
+                </span>
+              </Link>
+              <p className="mt-3 max-w-sm text-body leading-relaxed text-muted">
+                {t('footer_blurb')}
+              </p>
+            </div>
+
+            {/* Departments — the ones already loaded for the nav. */}
+            <FooterColumn title={t('footer_shop')}>
+              <FooterLink to="/shop">{t('all_products')}</FooterLink>
+              {departments.slice(0, 5).map((c) => (
+                <FooterLink key={c.id} to={`/c/${c.id}`}>
+                  {c.name}
+                </FooterLink>
+              ))}
+            </FooterColumn>
+
+            <FooterColumn title={t('account')}>
+              <FooterLink to="/orders">{t('orders')}</FooterLink>
+              <FooterLink to="/favorites">{t('favorites')}</FooterLink>
+              <FooterLink to="/addresses">{t('addresses')}</FooterLink>
+              <FooterLink to="/settings">{t('settings')}</FooterLink>
+            </FooterColumn>
+          </div>
+
+          <div className="mt-8 flex items-center justify-between border-t border-divider pt-5">
+            <span className="text-caption text-muted">
+              © {new Date().getFullYear()} {settings?.app_name ?? 'MODIST'} ·{' '}
+              {t('footer_rights')}
+            </span>
+            <div className="flex items-center gap-2">
+              <LocaleToggle />
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </footer>

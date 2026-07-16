@@ -103,6 +103,14 @@ const en: Dict = {
   retry: 'Retry',
   nothing_here: 'Nothing here yet.',
 
+  // footer
+  footer_blurb:
+    'Shop the latest arrivals — browse, save your favorites and order in a couple of taps.',
+  footer_shop: 'Shop',
+  footer_help: 'Help',
+  footer_rights: 'All rights reserved.',
+  contact_us: 'Contact us',
+
   // order statuses
   status_pending: 'Pending',
   status_paid: 'Paid',
@@ -207,6 +215,13 @@ const ar: Dict = {
   delete: 'حذف',
   retry: 'إعادة المحاولة',
   nothing_here: 'لا يوجد شيء هنا بعد.',
+
+  footer_blurb:
+    'تسوّق أحدث المنتجات — تصفّح، احفظ مفضّلاتك، واطلب في خطوتين.',
+  footer_shop: 'المتجر',
+  footer_help: 'المساعدة',
+  footer_rights: 'جميع الحقوق محفوظة.',
+  contact_us: 'تواصل معنا',
 
   status_pending: 'قيد الانتظار',
   status_paid: 'مدفوع',
