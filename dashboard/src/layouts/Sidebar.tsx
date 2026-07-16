@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Package,
   Tags,
+  ScanLine,
   ShoppingCart,
   Ticket,
   Image,
@@ -15,6 +16,7 @@ import { useLocaleStore } from '@/store/locale';
 
 const items = [
   { to: '/', key: 'nav_dashboard', icon: LayoutDashboard, end: true },
+  { to: '/pos', key: 'nav_pos', icon: ScanLine },
   { to: '/products', key: 'nav_products', icon: Package },
   { to: '/categories', key: 'nav_categories', icon: Tags },
   { to: '/orders', key: 'nav_orders', icon: ShoppingCart },

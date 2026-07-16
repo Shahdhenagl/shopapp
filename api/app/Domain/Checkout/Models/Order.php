@@ -45,6 +45,12 @@ class Order extends Model
 
     public const string PAYMENT_METHOD_CARD = 'creditCard';
     public const string PAYMENT_METHOD_CASH = 'cash';
+    // In-store "pay later" — the sale is recorded but stays unpaid.
+    public const string PAYMENT_METHOD_DEFERRED = 'deferred';
+
+    // Where the sale originated.
+    public const string CHANNEL_APP = 'app';
+    public const string CHANNEL_POS = 'pos';
 
     public const string PAYMENT_PENDING = 'pending';
     public const string PAYMENT_PAID = 'paid';
@@ -61,6 +67,9 @@ class Order extends Model
     protected $fillable = [
         'tenant_id',
         'user_id',
+        'channel',
+        'customer_name',
+        'customer_phone',
         'status',
         'subtotal',
         'discount',

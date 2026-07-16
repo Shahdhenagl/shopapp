@@ -30,3 +30,9 @@ export function hexArgbToCss(hex: string | null | undefined): string {
 export function intArgbToHex(value: number): string {
   return `#${(value >>> 0).toString(16).toUpperCase().padStart(8, '0')}`;
 }
+
+// Inverse of intArgbToHex — the API takes colours as ARGB ints on writes.
+export function hexArgbToInt(hex: string): number {
+  const parsed = Number.parseInt(hex.replace('#', ''), 16);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}

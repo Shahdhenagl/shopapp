@@ -22,9 +22,18 @@ class AdminOrderResource extends JsonResource
     {
         return [
             'id' => (string) $this->id,
-            'user_id' => (string) $this->user_id,
-            'user_name' => $this->whenLoaded('user', fn () => $this->user?->name),
+            // A walk-in POS sale has no account behind it — keep null, not "".
+            'user_id' => $this->user_id !== null ? (string) $this->user_id : null,
+            // Falls back to the walk-in name the cashier typed, if any.
+            'user_name' => $this->whenLoaded(
+                'user',
+                fn () => $this->user?->name ?? $this->customer_name,
+                fn () => $this->customer_name,
+            ),
             'user_email' => $this->whenLoaded('user', fn () => $this->user?->email),
+            'channel' => $this->channel, // app | pos
+            'customer_name' => $this->customer_name,
+            'customer_phone' => $this->customer_phone,
             'status' => $this->status,
             'payment_status' => $this->payment_status,
             'payment_method' => $this->payment_method,

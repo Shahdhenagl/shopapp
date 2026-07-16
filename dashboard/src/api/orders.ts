@@ -1,6 +1,12 @@
 import { adminClient } from './client';
 import { USE_MOCK } from '@/lib/config';
-import type { DataEnvelope, Order, OrderStatus, Paginated } from '@/types';
+import type {
+  DataEnvelope,
+  Order,
+  OrderStatus,
+  Paginated,
+  PosSaleInput,
+} from '@/types';
 import { mockState, delay } from '@/mock/store';
 
 export const ordersService = {
@@ -26,6 +32,37 @@ export const ordersService = {
       return delay(found);
     }
     const { data } = await adminClient.get<DataEnvelope<Order>>(`/orders/${id}`);
+    return data.data;
+  },
+
+  /** Ring up an in-store sale. Totals + stock are resolved server-side. */
+  async createPosSale(input: PosSaleInput): Promise<Order> {
+    if (USE_MOCK) {
+      const order: Order = {
+        id: `POS-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+        user_id: input.user_id ? String(input.user_id) : null,
+        user_name: input.customer_name ?? 'Walk-in',
+        channel: 'pos',
+        customer_name: input.customer_name ?? null,
+        customer_phone: input.customer_phone ?? null,
+        status: input.payment_method === 'deferred' ? 'pending' : 'paid',
+        payment_status: input.payment_method === 'deferred' ? 'pending' : 'paid',
+        payment_method: input.payment_method,
+        subtotal: 0,
+        discount: 0,
+        total: 0,
+        currency: 'EGP',
+        promo_code: input.promo_code ?? null,
+        items: [],
+        created_at: new Date().toISOString(),
+      };
+      mockState.orders.unshift(order);
+      return delay(order);
+    }
+    const { data } = await adminClient.post<DataEnvelope<Order>>(
+      '/orders',
+      input,
+    );
     return data.data;
   },
 

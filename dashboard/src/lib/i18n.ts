@@ -5,6 +5,7 @@ type Dict = Record<string, string>;
 const en: Dict = {
   app_name: 'MODIST Admin',
   nav_dashboard: 'Dashboard',
+  nav_pos: 'Cashier',
   nav_products: 'Products',
   nav_categories: 'Categories',
   nav_orders: 'Orders',
@@ -41,6 +42,7 @@ const en: Dict = {
 const ar: Dict = {
   app_name: 'مودِست',
   nav_dashboard: 'لوحة التحكم',
+  nav_pos: 'الكاشير',
   nav_products: 'المنتجات',
   nav_categories: 'الفئات',
   nav_orders: 'الطلبات',

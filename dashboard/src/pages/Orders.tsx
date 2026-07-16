@@ -1,6 +1,15 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CreditCard, Mail, MapPin, Package, Search, User, X } from 'lucide-react';
+import {
+  CreditCard,
+  Mail,
+  MapPin,
+  Package,
+  Phone,
+  Search,
+  User,
+  X,
+} from 'lucide-react';
 import { getErrorMessage, ordersService } from '@/api';
 import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/Badge';
@@ -85,9 +94,19 @@ function OrderDrawer({
           <div className="card space-y-2 p-4">
             <InfoRow icon={<User size={15} />}>
               <span className="font-medium">
-                {order.user_name ?? `User ${order.user_id}`}
+                {order.user_name ??
+                  order.customer_name ??
+                  (order.user_id ? `User ${order.user_id}` : 'Walk-in customer')}
               </span>
+              {order.channel === 'pos' && (
+                <span className="ms-2 align-middle">
+                  <Badge tone="purple">POS</Badge>
+                </span>
+              )}
             </InfoRow>
+            {order.customer_phone && (
+              <InfoRow icon={<Phone size={15} />}>{order.customer_phone}</InfoRow>
+            )}
             {order.user_email && (
               <InfoRow icon={<Mail size={15} />}>{order.user_email}</InfoRow>
             )}

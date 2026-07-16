@@ -10,6 +10,7 @@ import { Dashboard } from '@/pages/Dashboard';
 import { Products } from '@/pages/products/Products';
 import { Categories } from '@/pages/Categories';
 import { Orders } from '@/pages/Orders';
+import { Pos } from '@/pages/Pos';
 import { Promos } from '@/pages/Promos';
 import { Banners } from '@/pages/Banners';
 import { Users } from '@/pages/Users';
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/products" element={<Products />} />
             <Route path="/categories" element={<Categories />} />
+            <Route path="/pos" element={<Pos />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/promos" element={<Promos />} />
             <Route path="/banners" element={<Banners />} />

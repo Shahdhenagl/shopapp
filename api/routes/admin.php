@@ -48,6 +48,8 @@ Route::prefix('admin/v1')->group(function (): void {
 
         // Orders — fulfilment surface, open to Staff as well as admins.
         Route::get('orders', [OrderController::class, 'index']);
+        // In-store POS sale (the cashier is Staff, so it lives here).
+        Route::post('orders', [OrderController::class, 'store']);
         Route::get('orders/{id}', [OrderController::class, 'show']);
         Route::patch('orders/{id}', [OrderController::class, 'update']);
 

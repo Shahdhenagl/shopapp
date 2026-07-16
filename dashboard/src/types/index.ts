@@ -122,10 +122,12 @@ export interface AdminProduct {
   currency: string;
   rating: number;
   is_newest: boolean;
+  status?: string; // active | hidden
+  stock?: number;
   category_id: string; // leaf category slug
   images: string[];
   sizes: string[];
-  colors: string[];
+  colors: string[]; // #AARRGGBB
   created_at: string;
 }
 
@@ -220,11 +222,35 @@ export interface OrderItem {
   line_total: number;
 }
 
+/** Where the sale came from: the app checkout or the in-store POS. */
+export type OrderChannel = 'app' | 'pos';
+
+/** POS payment methods (`deferred` records the sale unpaid). */
+export type PosPaymentMethod = 'cash' | 'creditCard' | 'deferred';
+
+/** Body for POST /admin/v1/orders — an in-store sale. */
+export interface PosSaleInput {
+  items: {
+    product_id: string;
+    size: string;
+    color_value: number;
+    quantity: number;
+  }[];
+  payment_method: PosPaymentMethod;
+  user_id?: number | null;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  promo_code?: string | null;
+}
+
 export interface Order {
   id: string;
-  user_id: string;
+  user_id: string | null; // null for a walk-in POS sale
   user_name?: string;
   user_email?: string;
+  channel?: OrderChannel;
+  customer_name?: string | null;
+  customer_phone?: string | null;
   status: OrderStatus;
   payment_status: PaymentStatus;
   payment_method?: string;
