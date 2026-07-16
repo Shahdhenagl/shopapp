@@ -6,6 +6,7 @@ import { catalog, getErrorMessage } from '@/api';
 import { ProductCard } from '@/components/ProductCard';
 import { ErrorState, Skeleton } from '@/components/States';
 import { departments as topLevel, subtreeIds } from '@/lib/categories';
+import { useCatalogKey } from '@/hooks/useCatalogKey';
 import { useLocale } from '@/store/locale';
 import type { Category, Product } from '@/types';
 
@@ -34,7 +35,7 @@ function Rail({
           {t('see_all')} <ChevronLeft size={15} />
         </Link>
       </div>
-      <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
         {products.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}
@@ -46,19 +47,19 @@ function Rail({
 export function Home() {
   const t = useLocale((s) => s.t);
   const settingsQuery = useQuery({
-    queryKey: ['settings'],
+    queryKey: useCatalogKey('settings'),
     queryFn: () => catalog.settings(),
   });
   const categoriesQuery = useQuery({
-    queryKey: ['categories'],
+    queryKey: useCatalogKey('categories'),
     queryFn: () => catalog.categories(),
   });
   const bannersQuery = useQuery({
-    queryKey: ['banners'],
+    queryKey: useCatalogKey('banners'),
     queryFn: () => catalog.banners(),
   });
   const productsQuery = useQuery({
-    queryKey: ['products', 'home'],
+    queryKey: useCatalogKey('products', 'home'),
     queryFn: () => catalog.products({ per_page: 60 }),
   });
 
@@ -108,11 +109,19 @@ export function Home() {
     return '/shop';
   };
 
-  if (settingsQuery.error) {
+  // Surface the first failure rather than sitting on a skeleton with nothing to
+  // say — a silent grey page is the hardest kind of bug to report.
+  const failed = settingsQuery.error ?? productsQuery.error ?? categoriesQuery.error;
+  if (failed) {
     return (
       <ErrorState
-        message={getErrorMessage(settingsQuery.error)}
-        onRetry={() => settingsQuery.refetch()}
+        message={getErrorMessage(failed)}
+        onRetry={() => {
+          settingsQuery.refetch();
+          productsQuery.refetch();
+          categoriesQuery.refetch();
+          bannersQuery.refetch();
+        }}
       />
     );
   }
@@ -198,7 +207,7 @@ export function Home() {
 
       {/* Newest */}
       {productsQuery.isLoading ? (
-        <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="aspect-[3/4]" />
           ))}

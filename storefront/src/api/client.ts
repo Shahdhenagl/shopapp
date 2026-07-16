@@ -4,6 +4,9 @@ import { API_BASE_URL, TOKEN_KEY } from '@/lib/config';
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: { Accept: 'application/json' },
+  // A request must never hang: without this a stalled connection leaves the
+  // query pending and the screen stuck on its skeleton with nothing to report.
+  timeout: 20_000,
 });
 
 // Both clients authenticate with Sanctum bearer tokens — never cookies.

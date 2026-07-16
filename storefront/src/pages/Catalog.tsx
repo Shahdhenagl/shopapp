@@ -5,6 +5,7 @@ import { catalog, getErrorMessage } from '@/api';
 import { ProductCard } from '@/components/ProductCard';
 import { Empty, ErrorState, Skeleton } from '@/components/States';
 import { childrenOf, departments as topLevel } from '@/lib/categories';
+import { useCatalogKey } from '@/hooks/useCatalogKey';
 import { useLocale } from '@/store/locale';
 
 export function Catalog() {
@@ -14,12 +15,12 @@ export function Catalog() {
   const search = params.get('q') ?? '';
 
   const categoriesQuery = useQuery({
-    queryKey: ['categories'],
+    queryKey: useCatalogKey('categories'),
     queryFn: () => catalog.categories(),
   });
 
   const productsQuery = useQuery({
-    queryKey: ['products', { categoryId, search }],
+    queryKey: useCatalogKey('products', categoryId ?? 'all', search),
     queryFn: () =>
       catalog.products({
         category: categoryId || undefined,
@@ -71,7 +72,7 @@ export function Catalog() {
       )}
 
       {productsQuery.isLoading ? (
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="aspect-[3/4]" />
           ))}
@@ -84,7 +85,7 @@ export function Catalog() {
       ) : products.length === 0 ? (
         <Empty label={t('no_products')} />
       ) : (
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {products.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

@@ -6,6 +6,7 @@ import { cartApi, catalog, getErrorMessage } from '@/api';
 import { ErrorState, Loading } from '@/components/States';
 import { Reviews } from '@/components/Reviews';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useCatalogKey } from '@/hooks/useCatalogKey';
 import { useLocale } from '@/store/locale';
 import { useAuth } from '@/store/auth';
 import { colorToInt, money, swatch } from '@/lib/format';
@@ -27,7 +28,7 @@ export function ProductDetail() {
   const [added, setAdded] = useState(false);
 
   const query = useQuery({
-    queryKey: ['product', productId],
+    queryKey: useCatalogKey('product', productId),
     queryFn: () => catalog.product(productId!),
     enabled: Boolean(productId),
   });

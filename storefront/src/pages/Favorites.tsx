@@ -57,7 +57,7 @@ export function Favorites() {
   return (
     <div>
       <h1 className="mb-4 text-title font-bold text-ink">{t('favorites')}</h1>
-      <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
         {products.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}

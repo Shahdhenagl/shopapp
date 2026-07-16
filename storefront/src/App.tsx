@@ -1,9 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import { setUnauthorizedHandler } from '@/api';
 import { useAuth } from '@/store/auth';
-import { useLocale } from '@/store/locale';
 import { Layout } from '@/layouts/Layout';
 import { RequireAuth } from '@/layouts/RequireAuth';
 import { Home } from '@/pages/Home';
@@ -23,24 +21,15 @@ import { Settings } from '@/pages/Settings';
 
 export default function App() {
   const clear = useAuth((s) => s.clear);
-  const locale = useLocale((s) => s.locale);
-  const qc = useQueryClient();
 
   useEffect(() => {
     setUnauthorizedHandler(() => clear());
   }, [clear]);
 
-  // The API resolves names/descriptions from Accept-Language, so cached copy is
-  // stale the moment the language changes. Skip the mount run: clearing while
-  // the first queries are still in flight detaches them and they never resolve.
-  const mounted = useRef(false);
-  useEffect(() => {
-    if (!mounted.current) {
-      mounted.current = true;
-      return;
-    }
-    qc.clear();
-  }, [locale, qc]);
+  // NOTE: the locale is part of every catalog query key (see useCatalogKey), so
+  // switching language refetches naturally. Do NOT reach for queryClient.clear()
+  // here — clearing the cache from an effect races the in-flight first fetches
+  // and leaves them pending forever (the whole page sits on its skeletons).
 
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>

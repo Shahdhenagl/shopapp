@@ -6,6 +6,7 @@ import { cartApi, catalog } from '@/api';
 import { LocaleToggle } from '@/components/LocaleToggle';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/store/auth';
+import { useCatalogKey } from '@/hooks/useCatalogKey';
 import { useLocale } from '@/store/locale';
 
 function useCartCount() {
@@ -34,7 +35,7 @@ export function Layout() {
   const count = useCartCount();
 
   const { data: settings } = useQuery({
-    queryKey: ['settings'],
+    queryKey: useCatalogKey('settings'),
     queryFn: () => catalog.settings(),
   });
 
@@ -48,7 +49,7 @@ export function Layout() {
     <div className="flex min-h-full flex-col bg-canvas">
       {/* Header — flat surface, hairline underneath (the app has no shadows). */}
       <header className="sticky top-0 z-30 border-b border-hairline bg-surface">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <Link to="/" className="flex flex-none items-center gap-2">
             {settings?.logo_url ? (
               <img
@@ -112,12 +113,12 @@ export function Layout() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-5 sm:pb-12">
+      <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 pb-24 pt-5 sm:px-6 sm:pb-12 lg:px-8">
         <Outlet />
       </main>
 
       <footer className="hidden border-t border-hairline bg-surface py-6 sm:block">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 text-caption text-muted">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 text-caption sm:px-6 lg:px-8 text-muted">
           <span>
             © {new Date().getFullYear()} {settings?.app_name ?? 'MODIST'}
           </span>
