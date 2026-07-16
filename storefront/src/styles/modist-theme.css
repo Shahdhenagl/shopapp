@@ -1,0 +1,164 @@
+/* ===========================================================================
+ * MODIST — web theme tokens
+ * ---------------------------------------------------------------------------
+ * Generated from the Flutter app's single source of truth:
+ *   lib/core/constants/theme/app_palette.dart   (AppPalette.light / .dark)
+ *   lib/core/constants/theme/app_theme.dart     (radii, type sizes)
+ *   lib/core/constants/theme/app_button_styles.dart (button radius 14)
+ *
+ * If AppPalette changes, re-generate this file. Do NOT hand-edit one side.
+ * See docs/WEB_THEME.md for usage.
+ *
+ * Theme resolution mirrors the app's ThemeCubit (system / light / dark):
+ *   - :root                                  -> light (default)
+ *   - @media (prefers-color-scheme: dark)    -> system dark
+ *   - [data-theme="dark"] / [data-theme="light"] -> explicit user choice (wins)
+ * =========================================================================== */
+
+:root {
+  /* --- Brand / action ---------------------------------------------------- */
+  --modist-primary: #294f5d; /* deep slate — CTA buttons */
+  --modist-on-primary: #ffffff; /* label/icon on primary */
+
+  /* --- Canvas ------------------------------------------------------------ */
+  --modist-background: #ffffff; /* page canvas */
+  --modist-surface: #ffffff; /* cards / sheets / header */
+  --modist-surface-variant: #eef1f3; /* NEUTRAL: skeletons, icon buttons */
+  --modist-field-fill: #f2f4f5; /* input fill */
+
+  /* --- Text -------------------------------------------------------------- */
+  --modist-text-primary: #0e0e0e;
+  --modist-text-muted: #5e6a70;
+  --modist-text-hint: #98a2a7; /* placeholders only — low contrast */
+
+  /* --- Lines ------------------------------------------------------------- */
+  --modist-border: #e4e8ea; /* hairline that lifts white cards off white */
+  --modist-divider: #eef1f2;
+
+  /* --- Semantic ---------------------------------------------------------- */
+  --modist-success: #2f7d55;
+  --modist-success-surface: #e5f1ea;
+  --modist-error: #c84c41;
+  --modist-error-surface: #f9e8e5;
+  --modist-warning: #b17a22;
+  --modist-warning-surface: #f5eddb;
+  --modist-info-surface: #edf1f3;
+
+  /* --- Accents ----------------------------------------------------------- */
+  --modist-accent: #294f5d; /* price / active / quick-add */
+  --modist-section-fill: #dceaf4; /* sky tint behind category pills */
+  --modist-accent-pink: #db8aa9; /* favorite heart / likes / sale */
+  --modist-accent-pink-surface: #f7dee7;
+
+  /* --- Typography (Cairo, weights 400/500/600/700) ----------------------- */
+  --modist-font: "Cairo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --modist-weight-regular: 400;
+  --modist-weight-medium: 500;
+  --modist-weight-semibold: 600;
+  --modist-weight-bold: 700;
+
+  /* Type sizes lifted from AppTheme. Cairo's default line-height is correct;
+     the app never overrides it, so neither should the web (except buttons). */
+  --modist-text-title: 18px; /* app bar / page title, weight 700 */
+  --modist-text-button: 16px; /* filled button label, weight 700 */
+  --modist-text-button-outlined: 15px; /* outlined button label, weight 600 */
+  --modist-text-body: 14px; /* body / text button, weight 400/600 */
+  --modist-text-caption: 12px; /* field error text, weight 500 */
+  --modist-text-nav: 11px; /* bottom-nav label */
+
+  /* --- Radii (from AppTheme / AppButtonStyles) --------------------------- */
+  --modist-radius-input: 12px;
+  --modist-radius-button: 14px;
+  --modist-radius-card: 16px;
+  --modist-radius-pill: 999px;
+
+  /* --- Spacing rhythm (CLAUDE.md §3) ------------------------------------- */
+  --modist-space-1: 4px; /* inside a tight group */
+  --modist-space-2: 8px; /* inside a tight group */
+  --modist-space-3: 12px; /* between related items */
+  --modist-space-4: 20px; /* between distinct bands — the minimum */
+  --modist-space-5: 24px; /* between distinct sections */
+
+  /* --- Elevation --------------------------------------------------------- */
+  /* The app is flat: elevation 0 everywhere, structure comes from hairlines.
+     Only the bottom nav lifts (elevation 8). Keep shadows this restrained. */
+  --modist-shadow-none: none;
+  --modist-shadow-nav: 0 -2px 12px rgb(14 14 14 / 8%);
+
+  --modist-hairline: 1px solid var(--modist-border);
+  --modist-focus-width: 1.2px; /* focused input border width in-app */
+
+  color-scheme: light;
+}
+
+/* System dark — only when the user has not made an explicit choice. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --modist-primary: #3f6e80; /* lifted slate CTA */
+    --modist-on-primary: #ffffff;
+
+    --modist-background: #0f1315;
+    --modist-surface: #181c1e;
+    --modist-surface-variant: #232829;
+    --modist-field-fill: #232829;
+
+    --modist-text-primary: #f0f3f4;
+    --modist-text-muted: #98a2a7;
+    --modist-text-hint: #6e787d;
+
+    --modist-border: #2c3335;
+    --modist-divider: #1f2426;
+
+    --modist-success: #68be82;
+    --modist-success-surface: #143020;
+    --modist-error: #ff746c;
+    --modist-error-surface: #351a1a;
+    --modist-warning: #f0aa45;
+    --modist-warning-surface: #33270f;
+    --modist-info-surface: #22282a;
+
+    --modist-accent: #6fa8c4;
+    --modist-section-fill: #243942;
+    --modist-accent-pink: #e79fbb;
+    --modist-accent-pink-surface: #3b2530;
+
+    --modist-shadow-nav: 0 -2px 12px rgb(0 0 0 / 40%);
+
+    color-scheme: dark;
+  }
+}
+
+/* Explicit user choice — must win over the system signal in both directions. */
+:root[data-theme="dark"] {
+  --modist-primary: #3f6e80;
+  --modist-on-primary: #ffffff;
+
+  --modist-background: #0f1315;
+  --modist-surface: #181c1e;
+  --modist-surface-variant: #232829;
+  --modist-field-fill: #232829;
+
+  --modist-text-primary: #f0f3f4;
+  --modist-text-muted: #98a2a7;
+  --modist-text-hint: #6e787d;
+
+  --modist-border: #2c3335;
+  --modist-divider: #1f2426;
+
+  --modist-success: #68be82;
+  --modist-success-surface: #143020;
+  --modist-error: #ff746c;
+  --modist-error-surface: #351a1a;
+  --modist-warning: #f0aa45;
+  --modist-warning-surface: #33270f;
+  --modist-info-surface: #22282a;
+
+  --modist-accent: #6fa8c4;
+  --modist-section-fill: #243942;
+  --modist-accent-pink: #e79fbb;
+  --modist-accent-pink-surface: #3b2530;
+
+  --modist-shadow-nav: 0 -2px 12px rgb(0 0 0 / 40%);
+
+  color-scheme: dark;
+}

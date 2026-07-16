@@ -28,6 +28,19 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/admin.php'));
+
+            // The customer storefront is a SPA that owns the domain root, so
+            // any path that isn't the API and isn't a real file (its hashed
+            // assets live under /storefront/, the dashboard under /dashboard/)
+            // gets the shell and routes client-side. API 404s stay JSON.
+            Route::fallback(function (Request $request) {
+                abort_if($request->is('api/*'), 404);
+
+                $shell = public_path('storefront/index.html');
+                abort_unless(is_file($shell), 404);
+
+                return response()->file($shell);
+            });
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {

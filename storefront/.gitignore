@@ -1,0 +1,12 @@
+node_modules
+dist
+*.local
+.env
+.env.*.local
+
+# TS incremental build cache
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*

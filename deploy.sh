@@ -31,8 +31,9 @@ else
   rm -rf "$APP/public"
 fi
 
-echo ">> [3/5] publishing public/ (dashboard + entrypoint) to public_html…"
-rm -rf "$PUB/dashboard"
+echo ">> [3/5] publishing public/ (storefront + dashboard + entrypoint) to public_html…"
+# Drop the built SPAs first so renamed/hashed assets don't pile up.
+rm -rf "$PUB/dashboard" "$PUB/storefront"
 cp -a "$REPO/api/public/." "$PUB/"
 # Point the public entrypoint at the app one directory up (split layout).
 sed -i "s|'/\.\./|'/../laravel/|g" "$PUB/index.php"
