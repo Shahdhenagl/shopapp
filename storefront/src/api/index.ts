@@ -1,6 +1,8 @@
+import axios from 'axios';
 import { api } from './client';
 import type {
   Address,
+  AppNotification,
   AppSettings,
   AuthResponse,
   Banner,
@@ -9,6 +11,7 @@ import type {
   DataEnvelope,
   Order,
   Product,
+  Review,
   User,
 } from '@/types';
 
@@ -54,6 +57,30 @@ export const catalog = {
     const { data } = await api.get<DataEnvelope<Product>>(`/products/${id}`);
     return data.data;
   },
+
+  /** 404 degrades to no reviews rather than an error, as the app does. */
+  async reviews(productId: string): Promise<Review[]> {
+    try {
+      const { data } = await api.get<DataEnvelope<Review[]>>(
+        `/products/${productId}/reviews`,
+      );
+      return data.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) return [];
+      throw error;
+    }
+  },
+
+  async addReview(
+    productId: string,
+    input: { rating: number; comment?: string | null },
+  ): Promise<Review> {
+    const { data } = await api.post<DataEnvelope<Review>>(
+      `/products/${productId}/reviews`,
+      input,
+    );
+    return data.data;
+  },
 };
 
 // --- Auth -------------------------------------------------------------------
@@ -82,8 +109,53 @@ export const auth = {
     return data.data;
   },
 
+  async updateProfile(input: {
+    name?: string;
+    phone?: string | null;
+  }): Promise<User> {
+    const { data } = await api.patch<DataEnvelope<User>>('/me', input);
+    return data.data;
+  },
+
+  /** Single call: uploads the image and returns the updated user. */
+  async uploadAvatar(file: File): Promise<User> {
+    const form = new FormData();
+    form.append('image', file);
+    const { data } = await api.post<DataEnvelope<User>>('/me/avatar', form);
+    return data.data;
+  },
+
+  // Verification is a soft nudge — the account works unverified; only checkout
+  // is gated, server-side.
+  async sendEmailCode(): Promise<void> {
+    await api.post('/auth/email/verify/send');
+  },
+
+  async verifyEmail(code: string): Promise<void> {
+    await api.post('/auth/email/verify', { code });
+  },
+
   async logout(): Promise<void> {
     await api.post('/auth/logout');
+  },
+};
+
+// --- Notifications ----------------------------------------------------------
+
+export const notifications = {
+  async list(): Promise<AppNotification[]> {
+    const { data } = await api.get<DataEnvelope<AppNotification[]>>(
+      '/notifications',
+    );
+    return data.data;
+  },
+
+  /** Returns the server's updated list, which we adopt wholesale. */
+  async markAllRead(): Promise<AppNotification[]> {
+    const { data } = await api.post<DataEnvelope<AppNotification[]>>(
+      '/notifications/read',
+    );
+    return data.data;
   },
 };
 
@@ -168,6 +240,25 @@ export const account = {
 
   async addAddress(input: Partial<Address>): Promise<Address> {
     const { data } = await api.post<DataEnvelope<Address>>('/addresses', input);
+    return data.data;
+  },
+
+  async updateAddress(id: string, input: Partial<Address>): Promise<Address> {
+    const { data } = await api.patch<DataEnvelope<Address>>(
+      `/addresses/${id}`,
+      input,
+    );
+    return data.data;
+  },
+
+  async removeAddress(id: string): Promise<void> {
+    await api.delete(`/addresses/${id}`);
+  },
+
+  async makeDefault(id: string): Promise<Address> {
+    const { data } = await api.post<DataEnvelope<Address>>(
+      `/addresses/${id}/default`,
+    );
     return data.data;
   },
 };

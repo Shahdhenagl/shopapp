@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, Heart, Minus, Plus, ShoppingBag, Star } from 'lucide-react';
 import { cartApi, catalog, getErrorMessage } from '@/api';
 import { ErrorState, Loading } from '@/components/States';
+import { Reviews } from '@/components/Reviews';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useLocale } from '@/store/locale';
 import { useAuth } from '@/store/auth';
 import { colorToInt, money, swatch } from '@/lib/format';
 
@@ -13,6 +15,7 @@ export function ProductDetail() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const authed = useAuth((s) => Boolean(s.token));
+  const t = useLocale((s) => s.t);
   const { isFavorite, toggle: toggleFavorite, enabled: canFavorite } =
     useFavorites();
 
@@ -65,11 +68,11 @@ export function ProductDetail() {
       return;
     }
     if (product.sizes.length > 0 && !size) {
-      setError('اختر المقاس أولًا.');
+      setError(t('choose_size'));
       return;
     }
     if (product.colors.length > 0 && !color) {
-      setError('اختر اللون أولًا.');
+      setError(t('choose_color'));
       return;
     }
     addMutation.mutate();
@@ -154,7 +157,7 @@ export function ProductDetail() {
 
         {product.sizes.length > 0 && (
           <div className="mt-5">
-            <p className="label">المقاس</p>
+            <p className="label">{t('size')}</p>
             <div className="flex flex-wrap gap-2">
               {product.sizes.map((s) => (
                 <button
@@ -174,7 +177,7 @@ export function ProductDetail() {
 
         {product.colors.length > 0 && (
           <div className="mt-5">
-            <p className="label">اللون</p>
+            <p className="label">{t('color')}</p>
             <div className="flex flex-wrap gap-2">
               {product.colors.map((c) => (
                 <button
@@ -195,12 +198,12 @@ export function ProductDetail() {
         )}
 
         <div className="mt-5">
-          <p className="label">الكمية</p>
+          <p className="label">{t('quantity')}</p>
           <div className="flex w-fit items-center gap-3 rounded-pill border border-hairline px-2 py-1">
             <button
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               className="rounded-pill p-1.5 text-ink hover:bg-surface-variant"
-              aria-label="إنقاص"
+              aria-label="-"
             >
               <Minus size={15} />
             </button>
@@ -210,7 +213,7 @@ export function ProductDetail() {
             <button
               onClick={() => setQuantity((q) => q + 1)}
               className="rounded-pill p-1.5 text-ink hover:bg-surface-variant"
-              aria-label="زيادة"
+              aria-label="+"
             >
               <Plus size={15} />
             </button>
@@ -232,14 +235,19 @@ export function ProductDetail() {
         >
           {added ? (
             <>
-              <Check size={18} /> أُضيف للسلة
+              <Check size={18} /> {t('added')}
             </>
           ) : (
             <>
-              <ShoppingBag size={18} /> أضف إلى السلة
+              <ShoppingBag size={18} /> {t('add_to_cart')}
             </>
           )}
         </button>
+      </div>
+
+      {/* Full width beneath both columns. */}
+      <div className="lg:col-span-2">
+        <Reviews productId={productId!} />
       </div>
     </div>
   );

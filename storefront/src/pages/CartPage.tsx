@@ -2,13 +2,16 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
-import { cartApi, getErrorMessage } from '@/api';
+import { cartApi, catalog, getErrorMessage } from '@/api';
 import { Empty, ErrorState, Loading } from '@/components/States';
 import { useAuth } from '@/store/auth';
+import { useLocale } from '@/store/locale';
 import { money, swatch } from '@/lib/format';
+import { totalsFor } from '@/lib/totals';
 
 export function CartPage() {
   const authed = useAuth((s) => Boolean(s.token));
+  const t = useLocale((s) => s.t);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [promo, setPromo] = useState('');
@@ -18,6 +21,12 @@ export function CartPage() {
     queryKey: ['cart'],
     queryFn: () => cartApi.get(),
     enabled: authed,
+  });
+
+  // Shipping isn't in the server's summary — the client adds it (as the app does).
+  const settingsQuery = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => catalog.settings(),
   });
 
   const refresh = (cart: unknown) => {
@@ -40,13 +49,14 @@ export function CartPage() {
     onError: (e) => setError(getErrorMessage(e)),
   });
 
+  // The app shows the sign-in CTA on the empty cart for guests only.
   if (!authed) {
     return (
       <div className="py-16 text-center">
         <ShoppingBag className="mx-auto mb-3 text-hint" size={30} />
-        <p className="text-body text-muted">سجّل الدخول لعرض سلتك.</p>
+        <p className="text-body text-muted">{t('sign_in_to_cart')}</p>
         <Link to="/login" className="btn btn--sm mt-4">
-          تسجيل الدخول
+          {t('sign_in')}
         </Link>
       </div>
     );
@@ -67,18 +77,20 @@ export function CartPage() {
     return (
       <div className="py-16 text-center">
         <ShoppingBag className="mx-auto mb-3 text-hint" size={30} />
-        <Empty label="سلتك فاضية." />
+        <Empty label={t('cart_empty')} />
         <Link to="/shop" className="btn btn--sm">
-          تصفّح المتجر
+          {t('browse_shop')}
         </Link>
       </div>
     );
   }
 
+  const totals = totalsFor(cart, settingsQuery.data?.shipping_fee ?? 0);
+
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
       <div>
-        <h1 className="mb-3 text-title font-bold text-ink">سلة التسوّق</h1>
+        <h1 className="mb-3 text-title font-bold text-ink">{t('cart_title')}</h1>
         <ul className="space-y-3">
           {cart.items.map((item) => (
             <li key={item.line_id} className="card flex gap-3 p-3">
@@ -123,7 +135,7 @@ export function CartPage() {
                     qtyMutation.mutate({ lineId: item.line_id, quantity: 0 })
                   }
                   className="rounded-pill p-1.5 text-danger hover:bg-danger-surface"
-                  aria-label="حذف"
+                  aria-label={t("delete")}
                 >
                   <Trash2 size={15} />
                 </button>
@@ -136,7 +148,7 @@ export function CartPage() {
                       })
                     }
                     className="rounded-pill p-1 text-ink"
-                    aria-label="إنقاص"
+                    aria-label="-"
                   >
                     <Minus size={13} />
                   </button>
@@ -151,7 +163,7 @@ export function CartPage() {
                       })
                     }
                     className="rounded-pill p-1 text-ink"
-                    aria-label="زيادة"
+                    aria-label="+"
                   >
                     <Plus size={13} />
                   </button>
@@ -164,12 +176,12 @@ export function CartPage() {
 
       {/* Summary */}
       <aside className="card h-fit p-4 lg:sticky lg:top-20">
-        <h2 className="mb-3 text-body font-bold text-ink">الملخّص</h2>
+        <h2 className="mb-3 text-body font-bold text-ink">{t('summary')}</h2>
 
         <div className="flex gap-2">
           <input
             className="field"
-            placeholder="كود الخصم"
+            placeholder={t('promo_code')}
             value={promo}
             onChange={(e) => setPromo(e.target.value.toUpperCase())}
           />
@@ -178,7 +190,7 @@ export function CartPage() {
             disabled={!promo.trim() || promoMutation.isPending}
             onClick={() => promoMutation.mutate()}
           >
-            تطبيق
+            {t('apply')}
           </button>
         </div>
         {error && <p className="field-error">{error}</p>}
@@ -187,23 +199,31 @@ export function CartPage() {
 
         <dl className="space-y-2 text-body">
           <div className="flex justify-between text-muted">
-            <dt>المجموع الفرعي</dt>
-            <dd>{money(cart.summary.subtotal, cart.summary.currency)}</dd>
+            <dt>{t('subtotal')}</dt>
+            <dd>{money(totals.subtotal, totals.currency)}</dd>
           </div>
-          {cart.summary.discount > 0 && (
+          {totals.discount > 0 && (
             <div className="flex justify-between text-success">
-              <dt>الخصم {cart.summary.applied_promo?.code}</dt>
-              <dd>− {money(cart.summary.discount, cart.summary.currency)}</dd>
+              <dt>
+                {t('discount')} {cart.summary.applied_promo?.code}
+              </dt>
+              <dd>− {money(totals.discount, totals.currency)}</dd>
+            </div>
+          )}
+          {totals.shipping > 0 && (
+            <div className="flex justify-between text-muted">
+              <dt>{t('shipping')}</dt>
+              <dd>{money(totals.shipping, totals.currency)}</dd>
             </div>
           )}
           <div className="flex justify-between pt-1 text-title font-bold text-ink">
-            <dt>الإجمالي</dt>
-            <dd>{money(cart.summary.total, cart.summary.currency)}</dd>
+            <dt>{t('total')}</dt>
+            <dd>{money(totals.total, totals.currency)}</dd>
           </div>
         </dl>
 
         <button className="btn mt-4 w-full" onClick={() => navigate('/checkout')}>
-          إتمام الشراء
+          {t('checkout')}
         </button>
       </aside>
     </div>

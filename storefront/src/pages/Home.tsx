@@ -6,6 +6,7 @@ import { catalog, getErrorMessage } from '@/api';
 import { ProductCard } from '@/components/ProductCard';
 import { ErrorState, Skeleton } from '@/components/States';
 import { departments as topLevel, subtreeIds } from '@/lib/categories';
+import { useLocale } from '@/store/locale';
 import type { Category, Product } from '@/types';
 
 function Rail({
@@ -17,6 +18,8 @@ function Rail({
   to: string;
   products: Product[];
 }) {
+  const t = useLocale((s) => s.t);
+
   // A promoted category with nothing in it never renders a bare header.
   if (products.length === 0) return null;
 
@@ -28,7 +31,7 @@ function Rail({
           to={to}
           className="flex items-center gap-0.5 text-body font-semibold text-accent"
         >
-          عرض الكل <ChevronLeft size={15} />
+          {t('see_all')} <ChevronLeft size={15} />
         </Link>
       </div>
       <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-5">
@@ -41,6 +44,7 @@ function Rail({
 }
 
 export function Home() {
+  const t = useLocale((s) => s.t);
   const settingsQuery = useQuery({
     queryKey: ['settings'],
     queryFn: () => catalog.settings(),
@@ -155,12 +159,12 @@ export function Home() {
       {departments.length > 0 && (
         <section className="mt-7">
           <div className="mb-3 flex items-baseline justify-between">
-            <h2 className="text-title font-bold text-ink">تسوّق حسب القسم</h2>
+            <h2 className="text-title font-bold text-ink">{t('shop_by_department')}</h2>
             <Link
               to="/shop"
               className="flex items-center gap-0.5 text-body font-semibold text-accent"
             >
-              عرض الكل <ChevronLeft size={15} />
+              {t('see_all')} <ChevronLeft size={15} />
             </Link>
           </div>
 
@@ -200,7 +204,7 @@ export function Home() {
           ))}
         </div>
       ) : (
-        <Rail title="وصل حديثًا" to="/shop" products={newest} />
+        <Rail title={t('newest')} to="/shop" products={newest} />
       )}
 
       {/* Dashboard-curated rails */}

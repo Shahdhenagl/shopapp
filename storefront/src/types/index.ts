@@ -136,13 +136,34 @@ export interface Order {
 
 export interface Address {
   id: string;
+  label: string | null;
   address: string;
   city: string | null;
   area: string | null;
   branch: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  is_default?: boolean;
+  phone: string | null;
+  is_default: boolean;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+export interface Review {
+  id: string;
+  author_name: string | null;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+}
+
+export type NotificationType = 'order' | 'promo' | 'product' | 'general';
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  message: string;
+  images: string[];
+  is_read: boolean;
+  created_at: string;
 }
 
 export interface DataEnvelope<T> {

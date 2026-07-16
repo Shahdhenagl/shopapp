@@ -2,9 +2,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingBag } from 'lucide-react';
 import { money, swatch } from '@/lib/format';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useLocale } from '@/store/locale';
 import type { Product } from '@/types';
 
 export function ProductCard({ product }: { product: Product }) {
+  const t = useLocale((s) => s.t);
   const navigate = useNavigate();
   const { isFavorite, toggle, enabled } = useFavorites();
   const favorite = isFavorite(product.id);
@@ -37,13 +39,13 @@ export function ProductCard({ product }: { product: Product }) {
         )}
 
         {product.is_newest && (
-          <span className="chip chip--sale absolute start-2 top-2">جديد</span>
+          <span className="chip chip--sale absolute start-2 top-2">{t('newest')}</span>
         )}
 
         <button
           type="button"
           onClick={onHeart}
-          aria-label={favorite ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
+          aria-label={t('favorites')}
           aria-pressed={favorite}
           className="absolute end-2 top-2 grid h-8 w-8 place-items-center rounded-pill bg-surface/90 backdrop-blur transition hover:scale-105"
         >

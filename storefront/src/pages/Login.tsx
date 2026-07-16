@@ -3,8 +3,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { auth, getErrorMessage } from '@/api';
 import { useAuth } from '@/store/auth';
+import { useLocale } from '@/store/locale';
 
 export function Login() {
+  const t = useLocale((s) => s.t);
   const navigate = useNavigate();
   const location = useLocation();
   const setSession = useAuth((s) => s.setSession);
@@ -26,8 +28,8 @@ export function Login() {
 
   return (
     <div className="mx-auto max-w-sm py-8">
-      <h1 className="mb-1 text-title font-bold text-ink">تسجيل الدخول</h1>
-      <p className="mb-5 text-body text-muted">أهلًا بعودتك.</p>
+      <h1 className="mb-1 text-title font-bold text-ink">{t('sign_in')}</h1>
+      <p className="mb-5 text-body text-muted">{t('welcome_back')}</p>
 
       <form
         className="space-y-3"
@@ -38,7 +40,7 @@ export function Login() {
         }}
       >
         <div>
-          <label className="label">البريد الإلكتروني</label>
+          <label className="label">{t('email')}</label>
           <input
             type="email"
             className="field"
@@ -48,7 +50,7 @@ export function Login() {
           />
         </div>
         <div>
-          <label className="label">كلمة المرور</label>
+          <label className="label">{t('password')}</label>
           <input
             type="password"
             className="field"
@@ -61,14 +63,14 @@ export function Login() {
         {error && <p className="field-error">{error}</p>}
 
         <button className="btn w-full" disabled={mutation.isPending}>
-          {mutation.isPending ? '…' : 'دخول'}
+          {mutation.isPending ? '…' : t('sign_in')}
         </button>
       </form>
 
       <p className="mt-4 text-center text-body text-muted">
-        ليس لديك حساب؟{' '}
+        {t('no_account')}{' '}
         <Link to="/register" className="font-semibold text-accent">
-          أنشئ حسابًا
+          {t('sign_up')}
         </Link>
       </p>
     </div>

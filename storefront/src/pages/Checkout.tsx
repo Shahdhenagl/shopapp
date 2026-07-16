@@ -1,15 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Banknote, CheckCircle2, CreditCard } from 'lucide-react';
-import { cartApi, catalog, checkout, getErrorMessage } from '@/api';
+import { account, cartApi, catalog, checkout, getErrorMessage } from '@/api';
 import { ErrorState, Loading } from '@/components/States';
+import { useLocale } from '@/store/locale';
 import { money } from '@/lib/format';
+import { totalsFor } from '@/lib/totals';
 import type { Order } from '@/types';
 
 export function Checkout() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const t = useLocale((s) => s.t);
 
   const [address, setAddress] = useState({
     address: '',
@@ -17,6 +20,7 @@ export function Checkout() {
     area: '',
     branch: '',
   });
+  const [savedId, setSavedId] = useState<string>('');
   const [method, setMethod] = useState<'cash' | 'creditCard'>('cash');
   const [error, setError] = useState<string | null>(null);
   const [placed, setPlaced] = useState<Order | null>(null);
@@ -26,6 +30,40 @@ export function Checkout() {
     queryKey: ['settings'],
     queryFn: () => catalog.settings(),
   });
+  const addressesQuery = useQuery({
+    queryKey: ['addresses'],
+    queryFn: () => account.addresses(),
+  });
+
+  // Pick the default address once it arrives, so the common case is one tap.
+  useEffect(() => {
+    const saved = addressesQuery.data;
+    if (!saved || saved.length === 0 || savedId) return;
+
+    const preferred = saved.find((a) => a.is_default) ?? saved[0];
+    setSavedId(preferred.id);
+    setAddress({
+      address: preferred.address,
+      city: preferred.city ?? '',
+      area: preferred.area ?? '',
+      branch: preferred.branch ?? '',
+    });
+  }, [addressesQuery.data, savedId]);
+
+  const chooseSaved = (id: string) => {
+    setSavedId(id);
+    const found = addressesQuery.data?.find((a) => a.id === id);
+    if (!found) {
+      setAddress({ address: '', city: '', area: '', branch: '' });
+      return;
+    }
+    setAddress({
+      address: found.address,
+      city: found.city ?? '',
+      area: found.area ?? '',
+      branch: found.branch ?? '',
+    });
+  };
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -60,22 +98,23 @@ export function Checkout() {
     return (
       <div className="mx-auto max-w-sm py-16 text-center">
         <CheckCircle2 className="mx-auto mb-3 text-success" size={40} />
-        <h1 className="text-title font-bold text-ink">تم استلام طلبك</h1>
+        <h1 className="text-title font-bold text-ink">{t('order_received')}</h1>
         <p className="mt-1 text-body text-muted">
-          رقم الطلب <span className="font-mono font-bold">{placed.id}</span>
+          {t('order_number')}{' '}
+          <span className="font-mono font-bold">{placed.id}</span>
         </p>
         <p className="price mt-1 text-title">
           {money(placed.total, placed.currency)}
         </p>
         <div className="mt-5 flex justify-center gap-2">
-          <button className="btn btn--sm" onClick={() => navigate('/account')}>
-            طلباتي
+          <button className="btn btn--sm" onClick={() => navigate('/orders')}>
+            {t('my_orders')}
           </button>
           <button
             className="btn btn--outlined btn--sm"
             onClick={() => navigate('/shop')}
           >
-            متابعة التسوّق
+            {t('keep_shopping')}
           </button>
         </div>
       </div>
@@ -84,14 +123,14 @@ export function Checkout() {
 
   const cart = cartQuery.data!;
   const flags = settingsQuery.data?.flags;
-  const shipping = settingsQuery.data?.shipping_fee ?? 0;
+  const totals = totalsFor(cart, settingsQuery.data?.shipping_fee ?? 0);
 
   if (cart.items.length === 0) {
     return (
       <div className="py-16 text-center">
-        <p className="text-body text-muted">سلتك فاضية.</p>
+        <p className="text-body text-muted">{t('cart_empty')}</p>
         <button className="btn btn--sm mt-4" onClick={() => navigate('/shop')}>
-          تصفّح المتجر
+          {t('browse_shop')}
         </button>
       </div>
     );
@@ -100,7 +139,7 @@ export function Checkout() {
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
       <div>
-        <h1 className="mb-3 text-title font-bold text-ink">إتمام الشراء</h1>
+        <h1 className="mb-3 text-title font-bold text-ink">{t('checkout')}</h1>
 
         <form
           className="card space-y-3 p-4"
@@ -111,10 +150,30 @@ export function Checkout() {
           }}
           id="checkout-form"
         >
-          <h2 className="text-body font-bold text-ink">عنوان التوصيل</h2>
+          <h2 className="text-body font-bold text-ink">
+            {t('delivery_address')}
+          </h2>
+
+          {/* Saved addresses — the app picks the default and lets you switch. */}
+          {(addressesQuery.data ?? []).length > 0 && (
+            <select
+              className="field"
+              value={savedId}
+              onChange={(e) => chooseSaved(e.target.value)}
+            >
+              {addressesQuery.data!.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.label ? `${a.label} — ` : ''}
+                  {a.address}
+                  {a.is_default ? ` (${t('default_address')})` : ''}
+                </option>
+              ))}
+              <option value="">＋ {t('add_address')}</option>
+            </select>
+          )}
 
           <div>
-            <label className="label">العنوان</label>
+            <label className="label">{t('address')}</label>
             <input
               className="field"
               value={address.address}
@@ -127,7 +186,7 @@ export function Checkout() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">المدينة</label>
+              <label className="label">{t('city')}</label>
               <input
                 className="field"
                 value={address.city}
@@ -137,7 +196,7 @@ export function Checkout() {
               />
             </div>
             <div>
-              <label className="label">المنطقة</label>
+              <label className="label">{t('area')}</label>
               <input
                 className="field"
                 value={address.area}
@@ -148,7 +207,9 @@ export function Checkout() {
             </div>
           </div>
 
-          <h2 className="pt-2 text-body font-bold text-ink">طريقة الدفع</h2>
+          <h2 className="pt-2 text-body font-bold text-ink">
+            {t('payment_method')}
+          </h2>
           <div className="grid grid-cols-2 gap-2">
             {flags?.cash_payment !== false && (
               <button
@@ -160,7 +221,7 @@ export function Checkout() {
                     : 'border-hairline text-ink'
                 }`}
               >
-                <Banknote size={16} /> عند الاستلام
+                <Banknote size={16} /> {t('cash_on_delivery')}
               </button>
             )}
             {flags?.card_payment !== false && (
@@ -173,7 +234,7 @@ export function Checkout() {
                     : 'border-hairline text-ink'
                 }`}
               >
-                <CreditCard size={16} /> بطاقة
+                <CreditCard size={16} /> {t('card')}
               </button>
             )}
           </div>
@@ -183,27 +244,27 @@ export function Checkout() {
       </div>
 
       <aside className="card h-fit p-4 lg:sticky lg:top-20">
-        <h2 className="mb-3 text-body font-bold text-ink">الملخّص</h2>
+        <h2 className="mb-3 text-body font-bold text-ink">{t('summary')}</h2>
         <dl className="space-y-2 text-body">
           <div className="flex justify-between text-muted">
-            <dt>المجموع الفرعي</dt>
-            <dd>{money(cart.summary.subtotal, cart.summary.currency)}</dd>
+            <dt>{t('subtotal')}</dt>
+            <dd>{money(totals.subtotal, totals.currency)}</dd>
           </div>
-          {cart.summary.discount > 0 && (
+          {totals.discount > 0 && (
             <div className="flex justify-between text-success">
-              <dt>الخصم</dt>
-              <dd>− {money(cart.summary.discount, cart.summary.currency)}</dd>
+              <dt>{t('discount')}</dt>
+              <dd>− {money(totals.discount, totals.currency)}</dd>
             </div>
           )}
-          {shipping > 0 && (
+          {totals.shipping > 0 && (
             <div className="flex justify-between text-muted">
-              <dt>الشحن</dt>
-              <dd>{money(shipping, cart.summary.currency)}</dd>
+              <dt>{t('shipping')}</dt>
+              <dd>{money(totals.shipping, totals.currency)}</dd>
             </div>
           )}
           <div className="flex justify-between pt-1 text-title font-bold text-ink">
-            <dt>الإجمالي</dt>
-            <dd>{money(cart.summary.total, cart.summary.currency)}</dd>
+            <dt>{t('total')}</dt>
+            <dd>{money(totals.total, totals.currency)}</dd>
           </div>
         </dl>
 
@@ -212,7 +273,7 @@ export function Checkout() {
           className="btn mt-4 w-full"
           disabled={mutation.isPending}
         >
-          {mutation.isPending ? '…' : 'تأكيد الطلب'}
+          {mutation.isPending ? '…' : t('place_order')}
         </button>
       </aside>
     </div>

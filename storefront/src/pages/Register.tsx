@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { auth, getErrorMessage } from '@/api';
 import { useAuth } from '@/store/auth';
+import { useLocale } from '@/store/locale';
 
 export function Register() {
+  const t = useLocale((s) => s.t);
   const navigate = useNavigate();
   const setSession = useAuth((s) => s.setSession);
 
@@ -38,8 +40,8 @@ export function Register() {
 
   return (
     <div className="mx-auto max-w-sm py-8">
-      <h1 className="mb-1 text-title font-bold text-ink">إنشاء حساب</h1>
-      <p className="mb-5 text-body text-muted">دقيقة واحدة وتبدأ التسوّق.</p>
+      <h1 className="mb-1 text-title font-bold text-ink">{t('sign_up')}</h1>
+      <p className="mb-5 text-body text-muted">{t('sign_up_blurb')}</p>
 
       <form
         className="space-y-3"
@@ -50,7 +52,7 @@ export function Register() {
         }}
       >
         <div>
-          <label className="label">الاسم</label>
+          <label className="label">{t('name')}</label>
           <input
             className="field"
             value={form.name}
@@ -59,7 +61,7 @@ export function Register() {
           />
         </div>
         <div>
-          <label className="label">البريد الإلكتروني</label>
+          <label className="label">{t('email')}</label>
           <input
             type="email"
             className="field"
@@ -69,7 +71,7 @@ export function Register() {
           />
         </div>
         <div>
-          <label className="label">رقم الهاتف</label>
+          <label className="label">{t('phone')}</label>
           <input
             className="field"
             dir="ltr"
@@ -79,7 +81,7 @@ export function Register() {
           />
         </div>
         <div>
-          <label className="label">كلمة المرور</label>
+          <label className="label">{t('password')}</label>
           <input
             type="password"
             className="field"
@@ -93,14 +95,14 @@ export function Register() {
         {error && <p className="field-error">{error}</p>}
 
         <button className="btn w-full" disabled={mutation.isPending}>
-          {mutation.isPending ? '…' : 'إنشاء الحساب'}
+          {mutation.isPending ? '…' : t('sign_up')}
         </button>
       </form>
 
       <p className="mt-4 text-center text-body text-muted">
-        لديك حساب بالفعل؟{' '}
+        {t('have_account')}{' '}
         <Link to="/login" className="font-semibold text-accent">
-          سجّل الدخول
+          {t('sign_in')}
         </Link>
       </p>
     </div>

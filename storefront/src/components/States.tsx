@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react';
+import { useLocale } from '@/store/locale';
 
 export function Loading({ label }: { label?: string }) {
   return (
@@ -16,20 +17,28 @@ export function ErrorState({
   message: string;
   onRetry?: () => void;
 }) {
+  const t = useLocale((s) => s.t);
+
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16">
       <p className="text-body text-danger">{message}</p>
       {onRetry && (
         <button className="btn btn--outlined btn--sm" onClick={onRetry}>
-          إعادة المحاولة
+          {t('retry')}
         </button>
       )}
     </div>
   );
 }
 
-export function Empty({ label = 'لا يوجد شيء هنا بعد.' }: { label?: string }) {
-  return <p className="py-16 text-center text-body text-muted">{label}</p>;
+export function Empty({ label }: { label?: string }) {
+  const t = useLocale((s) => s.t);
+
+  return (
+    <p className="py-16 text-center text-body text-muted">
+      {label ?? t('nothing_here')}
+    </p>
+  );
 }
 
 /** Neutral skeleton block — surfaceVariant, per the app's loading style. */

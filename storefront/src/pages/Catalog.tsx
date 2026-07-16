@@ -5,8 +5,10 @@ import { catalog, getErrorMessage } from '@/api';
 import { ProductCard } from '@/components/ProductCard';
 import { Empty, ErrorState, Skeleton } from '@/components/States';
 import { childrenOf, departments as topLevel } from '@/lib/categories';
+import { useLocale } from '@/store/locale';
 
 export function Catalog() {
+  const t = useLocale((s) => s.t);
   const { categoryId } = useParams();
   const [params] = useSearchParams();
   const search = params.get('q') ?? '';
@@ -40,8 +42,8 @@ export function Catalog() {
   }, [categories, current]);
 
   const title = search
-    ? `نتائج البحث عن "${search}"`
-    : (current?.name ?? 'كل المنتجات');
+    ? t('search_results', { q: search })
+    : (current?.name ?? t('all_products'));
 
   return (
     <div>
@@ -54,7 +56,7 @@ export function Catalog() {
             to="/shop"
             className={`pill flex-none ${!categoryId ? 'pill--active' : ''}`}
           >
-            الكل
+            {t('all')}
           </Link>
           {siblings.map((c) => (
             <Link
@@ -80,7 +82,7 @@ export function Catalog() {
           onRetry={() => productsQuery.refetch()}
         />
       ) : products.length === 0 ? (
-        <Empty label="لا توجد منتجات مطابقة." />
+        <Empty label={t('no_products')} />
       ) : (
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {products.map((p) => (

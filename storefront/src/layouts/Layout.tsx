@@ -5,6 +5,7 @@ import { Heart, Home, LayoutGrid, Search, ShoppingCart, User } from 'lucide-reac
 import { cartApi, catalog } from '@/api';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/store/auth';
+import { useLocale } from '@/store/locale';
 
 function useCartCount() {
   const authed = useAuth((s) => Boolean(s.token));
@@ -27,6 +28,7 @@ function CartBadge({ count }: { count: number }) {
 
 export function Layout() {
   const navigate = useNavigate();
+  const t = useLocale((s) => s.t);
   const [term, setTerm] = useState('');
   const count = useCartCount();
 
@@ -70,7 +72,7 @@ export function Layout() {
             />
             <input
               className="field py-2.5 ps-10"
-              placeholder="ابحث عن منتج…"
+              placeholder={t('search_placeholder')}
               value={term}
               onChange={(e) => setTerm(e.target.value)}
             />
@@ -83,14 +85,14 @@ export function Layout() {
             <Link
               to="/favorites"
               className="hidden rounded-pill p-2 text-ink hover:bg-surface-variant sm:block"
-              aria-label="المفضلة"
+              aria-label={t('nav_favorites')}
             >
               <Heart size={20} />
             </Link>
             <Link
               to="/cart"
               className="relative rounded-pill p-2 text-ink hover:bg-surface-variant"
-              aria-label="السلة"
+              aria-label={t('nav_cart')}
             >
               <ShoppingCart size={20} />
               <CartBadge count={count} />
@@ -98,7 +100,7 @@ export function Layout() {
             <Link
               to="/account"
               className="hidden rounded-pill p-2 text-ink hover:bg-surface-variant sm:block"
-              aria-label="حسابي"
+              aria-label={t('nav_profile')}
             >
               <User size={20} />
             </Link>
@@ -119,33 +121,45 @@ export function Layout() {
         </div>
       </footer>
 
-      {/* Bottom nav — the one lifted surface, mirroring the app. */}
+      {/* Bottom nav — the app's five tabs, Cart raised at the centre. It's the
+          one lifted surface; everything else is flat. */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-hairline bg-surface shadow-nav sm:hidden">
-        <div className="flex items-center justify-around py-2">
+        <div className="flex items-end justify-around py-2">
           {[
-            { to: '/', icon: Home, label: 'الرئيسية', end: true },
-            { to: '/shop', icon: LayoutGrid, label: 'المتجر' },
-            { to: '/favorites', icon: Heart, label: 'المفضلة' },
-            { to: '/cart', icon: ShoppingCart, label: 'السلة', badge: count },
-            { to: '/account', icon: User, label: 'حسابي' },
-          ].map(({ to, icon: Icon, label, end, badge }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `flex flex-col items-center gap-1 px-3 py-1 text-nav ${
-                  isActive ? 'text-primary' : 'text-muted'
-                }`
-              }
-            >
-              <span className="relative">
+            { to: '/', icon: Home, label: t('nav_home'), end: true },
+            { to: '/favorites', icon: Heart, label: t('nav_favorites') },
+            { to: '/cart', icon: ShoppingCart, label: t('nav_cart'), raised: true },
+            { to: '/shop', icon: LayoutGrid, label: t('nav_categories') },
+            { to: '/account', icon: User, label: t('nav_profile') },
+          ].map(({ to, icon: Icon, label, end, raised }) =>
+            raised ? (
+              <NavLink
+                key={to}
+                to={to}
+                className="flex flex-col items-center gap-1 text-nav text-muted"
+              >
+                <span className="relative -mt-6 grid h-12 w-12 place-items-center rounded-pill bg-primary text-on-primary shadow-nav">
+                  <Icon size={20} />
+                  <CartBadge count={count} />
+                </span>
+                {label}
+              </NavLink>
+            ) : (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className={({ isActive }) =>
+                  `flex flex-col items-center gap-1 px-3 py-1 text-nav ${
+                    isActive ? 'text-primary' : 'text-muted'
+                  }`
+                }
+              >
                 <Icon size={20} />
-                {badge !== undefined && <CartBadge count={badge} />}
-              </span>
-              {label}
-            </NavLink>
-          ))}
+                {label}
+              </NavLink>
+            ),
+          )}
         </div>
       </nav>
     </div>

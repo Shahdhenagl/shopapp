@@ -5,8 +5,10 @@ import { catalog, getErrorMessage } from '@/api';
 import { ProductCard } from '@/components/ProductCard';
 import { ErrorState, Loading } from '@/components/States';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useLocale } from '@/store/locale';
 
 export function Favorites() {
+  const t = useLocale((s) => s.t);
   const { ids, enabled } = useFavorites();
 
   // Favourites are ids only — detail comes from the catalog we already load.
@@ -20,9 +22,9 @@ export function Favorites() {
     return (
       <div className="py-16 text-center">
         <Heart className="mx-auto mb-3 text-hint" size={30} />
-        <p className="text-body text-muted">سجّل الدخول لحفظ منتجاتك المفضلة.</p>
+        <p className="text-body text-muted">{t('sign_in_to_favorite')}</p>
         <Link to="/login" className="btn btn--sm mt-4">
-          تسجيل الدخول
+          {t('sign_in')}
         </Link>
       </div>
     );
@@ -32,9 +34,9 @@ export function Favorites() {
     return (
       <div className="py-16 text-center">
         <Heart className="mx-auto mb-3 text-hint" size={30} />
-        <p className="text-body text-muted">لا توجد منتجات في المفضلة بعد.</p>
+        <p className="text-body text-muted">{t('no_favorites')}</p>
         <Link to="/shop" className="btn btn--sm mt-4">
-          تصفّح المتجر
+          {t('browse_shop')}
         </Link>
       </div>
     );
@@ -54,7 +56,7 @@ export function Favorites() {
 
   return (
     <div>
-      <h1 className="mb-4 text-title font-bold text-ink">المفضلة</h1>
+      <h1 className="mb-4 text-title font-bold text-ink">{t('favorites')}</h1>
       <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-4">
         {products.map((p) => (
           <ProductCard key={p.id} product={p} />
